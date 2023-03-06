@@ -1,5 +1,4 @@
 import datetime
-import sqlite3
 
 from bookkeeper.repository.sqlite_repository import SQLiteRepository  # CustomClass
 from dataclasses import dataclass
@@ -64,7 +63,7 @@ def test_cannot_update_without_pk(repo, custom_class):
 
 
 def test_get_all(repo, custom_class):
-    objects = [custom_class() for i in range(5)]
+    objects = [custom_class() for _ in range(5)]
     for o in objects:
         repo.add(o)
     assert repo.get_all() == objects
