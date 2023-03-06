@@ -8,11 +8,11 @@ from inspect import get_annotations
 import sqlite3
 
 
-@dataclass
-class CustomClass:
-    pk: int
-    name: str
-    # date: datetime
+# @dataclass
+# class CustomClass:
+#     pk: int
+#     name: str
+#     # date: datetime
 
 
 class SQLiteRepository(AbstractRepository[T]):
@@ -21,7 +21,6 @@ class SQLiteRepository(AbstractRepository[T]):
         self.db_file: str = db_file
         self.table_name: str = cls.__name__.lower()
         self.fields = get_annotations(cls, eval_str=True)
-        # assert False, self.fields
         self.fields.pop('pk')
 
     def add(self, obj: T) -> int:
@@ -46,7 +45,13 @@ class SQLiteRepository(AbstractRepository[T]):
         if temp is None:
             return None
         obj = self.cls(*temp)
-        return obj
+        converted_temp = ()
+        for i in range(len(temp)):
+            try:
+                converted_temp += (list(obj.__annotations__.values())[i](temp[i]),)
+            except TypeError:
+                converted_temp += (list(obj.__annotations__.values())[i].strptime(temp[i], '%Y-%m-%d %H:%M:%S'),)
+        return self.cls(*converted_temp)
 
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
         with sqlite3.connect(self.db_file) as con:
@@ -57,17 +62,17 @@ class SQLiteRepository(AbstractRepository[T]):
         return [self.cls(*obj) for obj in res.fetchall() if all(getattr(obj, attr) == value for attr, value in where.items())]
 
     def update(self, obj: T) -> None:
-        """ Обновить данные об объекте. Объект должен содержать поле pk. """
         names = list(self.fields.keys())
-        # assert False, names
-        # p = ', '.join('?' * len(self.fields))
         values = [getattr(obj, i) for i in self.fields]
         pk = obj.pk
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             for i in range(len(names)):
                 # assert False, f'{len(names)}, {names}, {names[i]}, {values}, {values[i]}'
-                cur.execute(f'UPDATE {self.table_name} SET {names[i]} = {repr(values[i])} WHERE pk = {pk}')
+                try:
+                    cur.execute(f'UPDATE {self.table_name} SET {names[1]} = {repr(values[1])} WHERE pk = {pk}')
+                except sqlite3.OperationalError:
+                    cur.execute(f'UPDATE {self.table_name} SET {names[1]} = {repr(str(values[1]))} WHERE pk = {pk}')
             con.commit()
         con.close()
 
