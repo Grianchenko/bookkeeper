@@ -28,21 +28,36 @@ class LabeledBox(QtWidgets.QWidget):
 
 
 class HistoryTable(QtWidgets.QTableWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, rows: tuple = (), columns: tuple = (), *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.setColumnCount(4)
-        self.setRowCount(10)  # ne 10, a count(cat_repo.get_all())
+        self.setColumnCount(len(columns))
+        if len(rows) == 0:
+            rows = ('',) * 10
 
-        self.setHorizontalHeaderLabels("Дата Сумма Категория Комментарий".split())
+        self.setRowCount(len(rows))
+
         header = self.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QtWidgets.QHeaderView.Stretch)
+
+        if len(columns) > 2:
+            k = 0
+            for i in range(len(columns) - 1):
+                k = i
+                header.setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeToContents)
+            header.setSectionResizeMode(k+1, QtWidgets.QHeaderView.Stretch)
+        else:
+            header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+            header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
         self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.verticalHeader().hide()
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+
+        if len(rows) > 3:
+            self.verticalHeader().hide()
+        else:
+            self.setVerticalHeaderLabels(rows)
+        self.setHorizontalHeaderLabels(columns)
 
     def set_data(self, data: list[list[str]]):
         for i, row in enumerate(data):
