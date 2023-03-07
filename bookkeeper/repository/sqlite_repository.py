@@ -36,7 +36,12 @@ class SQLiteRepository(AbstractRepository[T]):
             try:
                 converted_temp += (list(obj.__annotations__.values())[i](temp[i]),)
             except TypeError:
-                converted_temp += (list(obj.__annotations__.values())[i].strptime(temp[i], '%Y-%m-%d %H:%M:%S'),)
+                if type(temp[i]) == "<class 'datetime.datetime>'":
+                    converted_temp += (list(obj.__annotations__.values())[i].strptime(temp[i], '%Y-%m-%d %H:%M:%S'),)
+                elif temp[i] is None:
+                    converted_temp += (temp[i],)
+                else:
+                    converted_temp += (type(temp[i])(temp[i]),)
         return converted_temp
 
     def get(self, pk: int) -> T | None:
