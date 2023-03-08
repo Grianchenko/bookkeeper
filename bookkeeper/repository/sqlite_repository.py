@@ -37,7 +37,8 @@ class SQLiteRepository(AbstractRepository[T]):
                 converted_temp += (list(obj.__annotations__.values())[i](temp[i]),)
             except TypeError:
                 if type(temp[i]) == "<class 'datetime.datetime>'":
-                    converted_temp += (list(obj.__annotations__.values())[i].strptime(temp[i], '%Y-%m-%d %H:%M:%S'),)
+                    converted_temp += (list(obj.__annotations__.values(
+                    ))[i].strptime(temp[i], '%Y-%m-%d %H:%M:%S'),)
                 elif temp[i] is None:
                     converted_temp += (temp[i],)
                 else:
@@ -59,7 +60,8 @@ class SQLiteRepository(AbstractRepository[T]):
             cur = con.cursor()
             res = cur.execute(f'SELECT * FROM {self.table_name}')
         if where is None:
-            return [self.cls(*self.convert_object_datetime(temp)) for temp in res.fetchall()]
+            return [self.cls(*self.convert_object_datetime(temp))
+                    for temp in res.fetchall()]
         objs = []
         for temp in res.fetchall():
             obj = self.cls(*self.convert_object_datetime(temp))
@@ -76,11 +78,12 @@ class SQLiteRepository(AbstractRepository[T]):
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             for i in range(len(names)):
-                # assert False, f'{len(names)}, {names}, {names[i]}, {values}, {values[i]}'
                 try:
-                    cur.execute(f'UPDATE {self.table_name} SET {names[1]} = {repr(values[1])} WHERE pk = {pk}')
+                    cur.execute(f'UPDATE {self.table_name} SET {names[1]}'
+                                f' = {repr(values[1])} WHERE pk = {pk}')
                 except sqlite3.OperationalError:
-                    cur.execute(f'UPDATE {self.table_name} SET {names[1]} = {repr(str(values[1]))} WHERE pk = {pk}')
+                    cur.execute(f'UPDATE {self.table_name} SET {names[1]}'
+                                f' = {repr(str(values[1]))} WHERE pk = {pk}')
             con.commit()
         con.close()
 
@@ -93,4 +96,3 @@ class SQLiteRepository(AbstractRepository[T]):
                 raise KeyError
             con.commit()
         con.close()
-

@@ -51,7 +51,8 @@ class HistoryTable(QtWidgets.QTableWidget):
 
         self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+                           QtWidgets.QSizePolicy.Preferred)
 
         if len(rows) > 3:
             self.verticalHeader().hide()
@@ -63,6 +64,3 @@ class HistoryTable(QtWidgets.QTableWidget):
         for i, row in enumerate(data):
             for j, x in enumerate(row):
                 self.setItem(i, j, QtWidgets.QTableWidgetItem(str(x).capitalize()))
-
-
-

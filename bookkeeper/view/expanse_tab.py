@@ -23,7 +23,7 @@ class ExpenseHistory(QtWidgets.QWidget):
 
 
 class NewExpenseAdd(QtWidgets.QWidget):
-    button_clicked = QtCore.Signal(int, str, str, str)
+    button_clicked = QtCore.Signal(int, str, str, datetime)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -66,8 +66,11 @@ class NewExpenseAdd(QtWidgets.QWidget):
 
     def submit(self, mode: str):
         try:
-            self.button_clicked.emit(int(self.paid_input.text()), str(self.cat_choice.box.currentText()),
-                                     str(self.comm_input.text()), str(self.date_input.text()))
+            self.button_clicked.emit(int(self.paid_input.text()),
+                                     str(self.cat_choice.box.currentText()),
+                                     str(self.comm_input.text()),
+                                     str(datetime.strptime(self.date_input.text(),
+                                                           '%d.%m.%Y %H:%M')))
             if mode == 'add':
                 self.button_clicked.connect(print('Add-Expense-Click'))
             elif mode == 'delete':

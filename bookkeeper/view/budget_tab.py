@@ -1,4 +1,4 @@
-from datetime import datetime
+# from datetime import datetime
 from PySide6 import QtWidgets, QtCore
 
 from simple_widgets import LabeledInput, HistoryTable, LabeledBox
@@ -41,7 +41,8 @@ class EditBudget(QtWidgets.QWidget):
 
     def submit(self):
         try:
-            self.button_clicked.emit(str(self.length_choice.box.currentText()), int(self.limit_input.text()))
+            self.button_clicked.emit(str(self.length_choice.box.currentText()),
+                                     int(self.limit_input.text()))
             self.button_clicked.connect(print('Update-Budget-Click'))
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')

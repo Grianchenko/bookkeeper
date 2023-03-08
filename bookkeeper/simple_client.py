@@ -7,7 +7,7 @@ from bookkeeper.models.expense import Expense
 from bookkeeper.models.budget import Budget
 # from bookkeeper.repository.memory_repository import MemoryRepository
 from bookkeeper.repository.sqlite_repository import SQLiteRepository
-from bookkeeper.utils import read_tree
+# from bookkeeper.utils import read_tree
 
 cat_repo = SQLiteRepository[Category]('main_db.db', Category)
 exp_repo = SQLiteRepository[Expense]('main_db.db', Expense)

@@ -2,7 +2,7 @@
 Описан класс, представляющий ограничение бюджета
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 

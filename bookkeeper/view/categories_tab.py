@@ -1,7 +1,7 @@
-from datetime import datetime
+# from datetime import datetime
 from PySide6 import QtWidgets, QtCore
 
-from simple_widgets import LabeledInput, HistoryTable, LabeledBox
+from simple_widgets import LabeledInput, HistoryTable
 
 
 class CategoriesExists(QtWidgets.QWidget):
@@ -54,7 +54,8 @@ class CategoryManager(QtWidgets.QWidget):
 
     def submit(self, mode: str):
         try:
-            self.button_clicked.emit(str(self.name_input.text()), str(self.parent_input.text()))
+            self.button_clicked.emit(str(self.name_input.text()),
+                                     str(self.parent_input.text()))
             if mode == 'add':
                 self.button_clicked.connect(print('Add-Category-Click'))
             elif mode == 'delete':
