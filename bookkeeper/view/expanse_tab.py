@@ -23,31 +23,68 @@ class ExpenseHistory(QtWidgets.QWidget):
 
 
 class NewExpenseAdd(QtWidgets.QWidget):
-    button_clicked = QtCore.Signal(int, str, str)
+    button_clicked = QtCore.Signal(int, str, str, str)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.comm_input = LabeledInput('Comment:', '')
         self.paid_input = LabeledInput('Paid:', '0')
         self.cat_choice = LabeledBox('Category', ['1', '2', '3'])
-        self.submit_button = QtWidgets.QPushButton('Add')
-        self.submit_button.clicked.connect(self.submit)
 
+        self.add_button = QtWidgets.QPushButton('Add')
+        self.add_button.clicked.connect(self.add)
+        self.update_button = QtWidgets.QPushButton('Update')
+        self.update_button.clicked.connect(self.update_exp)
+        self.delete_button = QtWidgets.QPushButton('Delete')
+        self.delete_button.clicked.connect(self.delete)
+
+        self.date_input = QtWidgets.QDateTimeEdit()
+        self.date_input.setDateTime(QtCore.QDateTime.currentDateTime())
+
+        self.main_layout = QtWidgets.QVBoxLayout()
+
+        self.main_layout.addWidget(QtWidgets.QLabel('New expense'))
+
+        self.inputs_widget = QtWidgets.QWidget()
         self.layout = QtWidgets.QGridLayout()
-        self.layout.addWidget(QtWidgets.QLabel('New expense'), 0, 0)
-        self.layout.addWidget(self.cat_choice, 1, 0)
-        self.layout.addWidget(self.paid_input, 1, 1)
-        self.layout.addWidget(self.comm_input, 2, 0)
-        self.layout.addWidget(self.submit_button, 3, 1)
-        self.setLayout(self.layout)
+        self.layout.addWidget(self.cat_choice, 0, 0)
+        self.layout.addWidget(self.paid_input, 0, 1)
+        self.layout.addWidget(self.date_input, 1, 1)
+        self.layout.addWidget(self.comm_input, 1, 0)
+        self.inputs_widget.setLayout(self.layout)
+        self.main_layout.addWidget(self.inputs_widget)
 
-    def submit(self):
+        self.buttons_widget = QtWidgets.QWidget()
+        self.buttons_layout = QtWidgets.QHBoxLayout()
+        self.buttons_layout.addWidget(self.add_button)
+        self.buttons_layout.addWidget(self.update_button)
+        self.buttons_layout.addWidget(self.delete_button)
+        self.buttons_widget.setLayout(self.buttons_layout)
+        self.main_layout.addWidget(self.buttons_widget)
+
+        self.setLayout(self.main_layout)
+
+    def submit(self, mode: str):
         try:
             self.button_clicked.emit(int(self.paid_input.text()), str(self.cat_choice.box.currentText()),
-                                     str(self.comm_input.text()))
-            self.button_clicked.connect(print('Expense-Click'))
+                                     str(self.comm_input.text()), str(self.date_input.text()))
+            if mode == 'add':
+                self.button_clicked.connect(print('Add-Expense-Click'))
+            elif mode == 'delete':
+                self.button_clicked.connect(print('Delete-Expense-Click'))
+            elif mode == 'update':
+                self.button_clicked.connect(print('Update-Expense-Click'))
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
+
+    def add(self):
+        self.submit('add')
+
+    def delete(self):
+        self.submit('delete')
+
+    def update_exp(self):
+        self.submit('update')
 
 
 class Expense(QtWidgets.QWidget):

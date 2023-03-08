@@ -22,30 +22,56 @@ class CategoriesExists(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
 
-class NewCategory(QtWidgets.QWidget):
-    button_clicked = QtCore.Signal(str, int)
+class CategoryManager(QtWidgets.QWidget):
+    button_clicked = QtCore.Signal(str, str)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.name_input = LabeledInput('Category name', '')
         self.parent_input = LabeledInput('Parent (if needed)', '')
 
-        self.submit_button = QtWidgets.QPushButton('Add')
-        self.submit_button.clicked.connect(self.submit)
+        self.add_button = QtWidgets.QPushButton('Add')
+        self.add_button.clicked.connect(self.add)
+        self.update_button = QtWidgets.QPushButton('Update')
+        self.update_button.clicked.connect(self.update_cat)
+        self.delete_button = QtWidgets.QPushButton('Delete')
+        self.delete_button.clicked.connect(self.delete)
 
         self.layout = QtWidgets.QVBoxLayout()
-        self.layout.addWidget(QtWidgets.QLabel('New category'))
+        self.layout.addWidget(QtWidgets.QLabel('Category manager'))
         self.layout.addWidget(self.name_input)
         self.layout.addWidget(self.parent_input)
-        self.layout.addWidget(self.submit_button)
+
+        self.buttons_widget = QtWidgets.QWidget()
+        self.buttons_layout = QtWidgets.QHBoxLayout()
+        self.buttons_layout.addWidget(self.add_button)
+        self.buttons_layout.addWidget(self.update_button)
+        self.buttons_layout.addWidget(self.delete_button)
+        self.buttons_widget.setLayout(self.buttons_layout)
+
+        self.layout.addWidget(self.buttons_widget)
         self.setLayout(self.layout)
 
-    def submit(self):
+    def submit(self, mode: str):
         try:
             self.button_clicked.emit(str(self.name_input.text()), str(self.parent_input.text()))
-            self.button_clicked.connect(print('Category-Click'))
+            if mode == 'add':
+                self.button_clicked.connect(print('Add-Category-Click'))
+            elif mode == 'delete':
+                self.button_clicked.connect(print('Delete-Category-Click'))
+            elif mode == 'update':
+                self.button_clicked.connect(print('Update-Category-Click'))
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
+
+    def add(self):
+        self.submit('add')
+
+    def delete(self):
+        self.submit('delete')
+
+    def update_cat(self):
+        self.submit('update')
 
 
 class Categories(QtWidgets.QWidget):
@@ -53,7 +79,7 @@ class Categories(QtWidgets.QWidget):
         super().__init__(*args, **kwargs)
         self.layout = QtWidgets.QVBoxLayout()
         act_cat = CategoriesExists()
-        new_cat = NewCategory()
+        new_cat = CategoryManager()
         self.layout.addWidget(act_cat)
         self.layout.addWidget(new_cat)
         self.setLayout(self.layout)

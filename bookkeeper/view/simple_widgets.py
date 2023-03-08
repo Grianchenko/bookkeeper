@@ -2,7 +2,7 @@ from PySide6 import QtWidgets
 
 
 class LabeledInput(QtWidgets.QWidget):
-    def __init__(self, text: str, placeholder: int, *args, **kwargs):
+    def __init__(self, text: str, placeholder: int | str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.layout = QtWidgets.QVBoxLayout()
         self.label = QtWidgets.QLabel(text)

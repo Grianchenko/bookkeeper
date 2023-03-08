@@ -29,11 +29,11 @@ class EditBudget(QtWidgets.QWidget):
         super().__init__(*args, **kwargs)
         self.length_choice = LabeledBox('Category', ['day', 'week', 'month'])
         self.limit_input = LabeledInput('New budget', '1000')
-        self.submit_button = QtWidgets.QPushButton('Add')
+        self.submit_button = QtWidgets.QPushButton('Update')
         self.submit_button.clicked.connect(self.submit)
 
         self.layout = QtWidgets.QVBoxLayout()
-        self.layout.addWidget(QtWidgets.QLabel('New expense'))
+        self.layout.addWidget(QtWidgets.QLabel('Budget manager'))
         self.layout.addWidget(self.length_choice)
         self.layout.addWidget(self.limit_input)
         self.layout.addWidget(self.submit_button)
@@ -42,7 +42,7 @@ class EditBudget(QtWidgets.QWidget):
     def submit(self):
         try:
             self.button_clicked.emit(str(self.length_choice.box.currentText()), int(self.limit_input.text()))
-            self.button_clicked.connect(print('Budget-Click'))
+            self.button_clicked.connect(print('Update-Budget-Click'))
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
 
