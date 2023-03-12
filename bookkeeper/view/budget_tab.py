@@ -22,7 +22,7 @@ class ActiveBudgets(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
 
-class EditBudget(QtWidgets.QWidget):
+class BudgetManager(QtWidgets.QWidget):
     button_clicked = QtCore.Signal(str, int)
 
     def __init__(self, *args, **kwargs):
@@ -47,12 +47,12 @@ class EditBudget(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
 
 
-class Budget(QtWidgets.QWidget):
+class BudgetTab(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.layout = QtWidgets.QVBoxLayout()
         act_bud = ActiveBudgets()
-        edit_bud = EditBudget()
+        edit_bud = BudgetManager()
         self.layout.addWidget(act_bud)
         self.layout.addWidget(edit_bud)
         self.setLayout(self.layout)

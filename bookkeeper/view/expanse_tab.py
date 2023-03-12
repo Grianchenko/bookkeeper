@@ -3,6 +3,7 @@ from PySide6 import QtWidgets, QtCore
 
 from bookkeeper.view.utils import LabeledInput, HistoryTable, LabeledBox
 from bookkeeper.repository.abstract_repository import AbstractRepository
+from bookkeeper.models.expense import Expense
 
 
 class ExpenseHistory(QtWidgets.QWidget):
@@ -22,16 +23,17 @@ class ExpenseHistory(QtWidgets.QWidget):
 
     def set_data(self) -> None:
         self.data = []
-        for exp in self.exp_repo.get_all()[::-1]:
-            temp = [exp.expense_date, exp.amount,
-                    self.cat_repo.get(int(exp.category)).name, exp.comment]
-            self.data.append(temp)
+        got_all = self.exp_repo.get_all()
+        if got_all:
+            for exp in got_all[::-1]:
+                temp = [exp.expense_date, exp.amount,
+                        self.cat_repo.get(int(exp.category)).name, exp.comment]
+                self.data.append(temp)
         self.table.set_data(self.data)
 
 
-class NewExpenseAdd(QtWidgets.QWidget):
+class ExpenseManager(QtWidgets.QWidget):
     button_clicked = QtCore.Signal(int, str, str, datetime)
-    clicked = QtCore.Signal(int)
 
     def __init__(self, exp_repo: AbstractRepository, cat_repo: AbstractRepository,
                  exp_hist: ExpenseHistory, *args, **kwargs):
@@ -39,10 +41,11 @@ class NewExpenseAdd(QtWidgets.QWidget):
         self.exp_hist = exp_hist
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo
-        self.cat_list = [cat.name for cat in cat_repo.get_all()]
+        self.cat_list = []
         self.comm_input = LabeledInput('Comment:', '')
         self.paid_input = LabeledInput('Paid:', '0')
         self.cat_choice = LabeledBox('Category', self.cat_list)
+        self.set_cat_list()
 
         self.add_button = QtWidgets.QPushButton('Add')
         self.add_button.clicked.connect(self.add)
@@ -77,6 +80,12 @@ class NewExpenseAdd(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
 
+    def set_cat_list(self):
+        self.cat_list = [cat.name.capitalize() for
+                         cat in self.cat_repo.get_all()]
+        self.cat_choice.box.clear()
+        self.cat_choice.box.addItems(self.cat_list)
+
     def submit(self, mode: str) -> None:
         try:
             self.button_clicked.emit(int(self.paid_input.input.text()),
@@ -100,7 +109,7 @@ class NewExpenseAdd(QtWidgets.QWidget):
     def edit_expense(self, mode: str, amount: int,
                      cat: str, comm: str, date: datetime) -> None:
         cat_pk = self.cat_to_pk(cat)
-        exp = type(self.exp_repo.get(1))(amount, cat_pk, expense_date=date, comment=comm)
+        exp = Expense(amount, cat_pk, expense_date=date, comment=comm)
         if mode == 'add':
             self.exp_repo.add(exp)
         elif mode == 'delete':
@@ -111,10 +120,13 @@ class NewExpenseAdd(QtWidgets.QWidget):
         elif mode == 'update':
             exp_pk = self.exp_repo.get_all({'comment': comm,
                                             'expense_date': str(date)})[0].pk
-            self.exp_repo.update(exp_pk)
+            exp = Expense(int(amount), cat_pk, expense_date=date,
+                          comment=comm, pk=exp_pk)
+            print(exp)
+            self.exp_repo.update(exp)
 
     def cat_to_pk(self, cat) -> int:
-        return self.cat_repo.get_all({'name': cat})[0].pk
+        return self.cat_repo.get_all({'name': cat.lower()})[0].pk
 
     def add(self) -> None:
         self.submit('add')
@@ -126,7 +138,7 @@ class NewExpenseAdd(QtWidgets.QWidget):
         self.submit('update')
 
 
-class Expense(QtWidgets.QWidget):
+class ExpenseTab(QtWidgets.QWidget):
     def __init__(self, exp_repo: AbstractRepository, cat_repo: AbstractRepository,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -134,7 +146,7 @@ class Expense(QtWidgets.QWidget):
         self.cat_repo = cat_repo
         self.layout = QtWidgets.QVBoxLayout()
         self.exp_hist = ExpenseHistory(self.exp_repo, self.cat_repo)
-        self.new_exp = NewExpenseAdd(self.exp_repo, self.cat_repo, self.exp_hist)
+        self.new_exp = ExpenseManager(self.exp_repo, self.cat_repo, self.exp_hist)
         self.layout.addWidget(self.exp_hist)
         self.layout.addWidget(self.new_exp)
         self.setLayout(self.layout)

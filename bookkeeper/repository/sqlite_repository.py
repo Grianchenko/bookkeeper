@@ -81,11 +81,11 @@ class SQLiteRepository(AbstractRepository[T]):
             cur = con.cursor()
             for i in range(len(names)):
                 try:
-                    cur.execute(f'UPDATE {self.table_name} SET {names[1]}'
-                                f' = {repr(values[1])} WHERE pk = {pk}')
+                    cur.execute(f'UPDATE {self.table_name} SET {names[i]}'
+                                f' = {repr(values[i])} WHERE pk = {pk}')
                 except sqlite3.OperationalError:
-                    cur.execute(f'UPDATE {self.table_name} SET {names[1]}'
-                                f' = {repr(str(values[1]))} WHERE pk = {pk}')
+                    cur.execute(f'UPDATE {self.table_name} SET {names[i]}'
+                                f' = {repr(str(values[i]))} WHERE pk = {pk}')
             con.commit()
         con.close()
 
