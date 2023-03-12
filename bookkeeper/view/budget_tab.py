@@ -2,6 +2,7 @@
 from PySide6 import QtWidgets, QtCore
 
 from bookkeeper.view.utils import LabeledInput, HistoryTable, LabeledBox
+from bookkeeper.repository.sqlite_repository import AbstractRepository
 
 
 class ActiveBudgets(QtWidgets.QWidget):
@@ -48,7 +49,8 @@ class BudgetManager(QtWidgets.QWidget):
 
 
 class BudgetTab(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, exp_repo: AbstractRepository,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.layout = QtWidgets.QVBoxLayout()
         act_bud = ActiveBudgets()

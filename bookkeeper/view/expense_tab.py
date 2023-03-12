@@ -80,11 +80,13 @@ class ExpenseManager(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
 
+    @QtCore.Slot()
     def set_cat_list(self):
         self.cat_list = [cat.name.capitalize() for
                          cat in self.cat_repo.get_all()]
         self.cat_choice.box.clear()
         self.cat_choice.box.addItems(self.cat_list)
+        self.exp_hist.set_data()
 
     def submit(self, mode: str) -> None:
         try:

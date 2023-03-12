@@ -1,3 +1,5 @@
+import datetime
+
 from PySide6 import QtWidgets, QtCore
 
 from bookkeeper.view.utils import LabeledInput, HistoryTable, LabeledBox
@@ -11,9 +13,6 @@ class CategoriesExists(QtWidgets.QWidget):
         super().__init__(*args, **kwargs)
         self.cat_repo = cat_repo
         self.columns = ('Category', 'Parent')
-        self.train_data = [['1241.41241', '5000'],
-                           ['4332.111', '15000'],
-                           ['6156.12', '50000']]
         self.data = []
         self.table = HistoryTable(columns=self.columns)
         self.set_data()
@@ -41,7 +40,8 @@ class CategoryManager(QtWidgets.QWidget):
 
     def __init__(self, cat_repo: AbstractRepository,
                  exp_repo: AbstractRepository,
-                 cat_ex: CategoriesExists, *args, **kwargs):
+                 cat_ex: CategoriesExists,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cat_ex = cat_ex
         self.cat_repo = cat_repo
@@ -78,6 +78,7 @@ class CategoryManager(QtWidgets.QWidget):
                          cat in self.cat_repo.get_all()][::-1]
         self.parent_choice.box.clear()
         self.parent_choice.box.addItems(self.par_list)
+        self.button_clicked.emit('', '')
 
     def submit(self, mode: str) -> None:
         try:
@@ -110,6 +111,8 @@ class CategoryManager(QtWidgets.QWidget):
                 new_exp = Expense(exp.amount, parent_pk, exp.expense_date,
                                   exp.added_date, exp.comment, exp.pk)
                 self.exp_repo.update(new_exp)
+            # self.exp_sig.emit(6, '', '', datetime.datetime.now())
+            # self.exp_sig.connect(print('works'))
             for cat in self.cat_repo.get_all({'parent': cat_pk}):
                 new_cat = Category(cat.name, parent_pk, cat.pk)
                 self.cat_repo.update(new_cat)
@@ -135,12 +138,15 @@ class CategoryManager(QtWidgets.QWidget):
 
 
 class CategoriesTab(QtWidgets.QWidget):
-    def __init__(self, cat_repo: AbstractRepository, *args, **kwargs):
+    def __init__(self, cat_repo: AbstractRepository,
+                 exp_repo: AbstractRepository, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.exp_repo = exp_repo
         self.cat_repo = cat_repo
         self.layout = QtWidgets.QVBoxLayout()
         self.act_cat = CategoriesExists(cat_repo=self.cat_repo)
-        self.new_cat = CategoryManager(self.cat_repo, self.act_cat)
+        self.new_cat = CategoryManager(self.cat_repo, self.exp_repo,
+                                       self.act_cat)
         self.layout.addWidget(self.act_cat)
         self.layout.addWidget(self.new_cat)
         self.setLayout(self.layout)
