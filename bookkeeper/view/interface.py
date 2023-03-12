@@ -1,5 +1,3 @@
-import sys
-# from datetime import datetime
 from PySide6 import QtWidgets
 
 from bookkeeper.view.expanse_tab import Expense
@@ -20,6 +18,5 @@ class MainWindow(QtWidgets.QMainWindow):
         self.central_widget.addTab(Expense(self.exp_repo, self.cat_repo), 'Expenses')
         self.central_widget.addTab(Budget(), 'Budgets')
         self.central_widget.addTab(Categories(), 'Categories')
-        # self.central_widget.currentWidget().new_exp.button_clicked.connect(print('bbbb'))
 
         self.setCentralWidget(self.central_widget)

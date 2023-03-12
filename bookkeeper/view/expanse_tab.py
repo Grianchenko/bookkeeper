@@ -2,10 +2,12 @@ from datetime import datetime
 from PySide6 import QtWidgets, QtCore
 
 from bookkeeper.view.utils import LabeledInput, HistoryTable, LabeledBox
+from bookkeeper.repository.abstract_repository import AbstractRepository
 
 
 class ExpenseHistory(QtWidgets.QWidget):
-    def __init__(self, exp_repo, cat_repo, *args, **kwargs):
+    def __init__(self, exp_repo: AbstractRepository, cat_repo: AbstractRepository,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo
@@ -18,7 +20,7 @@ class ExpenseHistory(QtWidgets.QWidget):
         self.layout.addWidget(self.table)
         self.setLayout(self.layout)
 
-    def set_data(self):
+    def set_data(self) -> None:
         self.data = []
         for exp in self.exp_repo.get_all()[::-1]:
             temp = [exp.expense_date, exp.amount,
@@ -31,7 +33,8 @@ class NewExpenseAdd(QtWidgets.QWidget):
     button_clicked = QtCore.Signal(int, str, str, datetime)
     clicked = QtCore.Signal(int)
 
-    def __init__(self, exp_repo, cat_repo, exp_hist, *args, **kwargs):
+    def __init__(self, exp_repo: AbstractRepository, cat_repo: AbstractRepository,
+                 exp_hist: ExpenseHistory, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_hist = exp_hist
         self.exp_repo = exp_repo
@@ -74,24 +77,28 @@ class NewExpenseAdd(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
 
-    def submit(self, mode: str):
+    def submit(self, mode: str) -> None:
         try:
-            self.button_clicked.emit(int(self.paid_input.text()),
+            self.button_clicked.emit(int(self.paid_input.input.text()),
                                      str(self.cat_choice.box.currentText()),
-                                     str(self.comm_input.text()),
+                                     str(self.comm_input.input.text()),
                                      str(datetime.strptime(self.date_input.text(),
                                                            '%d.%m.%Y %H:%M')))
             if True:
-                self.button_clicked.connect(self.edit_expense(mode, int(self.paid_input.text()),
-                                                              self.cat_choice.box.currentText(),
-                                                              self.comm_input.text(),
-                                                              datetime.strptime(self.date_input.text(),
-                                                                                '%d.%m.%Y %H:%M')))
+                self.button_clicked.connect(self.edit_expense(mode,
+                                                              int(self.paid_input.input.text()),
+                                                              self.cat_choice.box.
+                                                              currentText(),
+                                                              self.comm_input.input.text(),
+                                                              datetime.strptime
+                                                              (self.date_input.text(),
+                                                               '%d.%m.%Y %H:%M')))
             self.button_clicked.connect(self.exp_hist.set_data())
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
 
-    def edit_expense(self, mode: str, amount: int, cat: str, comm: str, date: datetime):
+    def edit_expense(self, mode: str, amount: int,
+                     cat: str, comm: str, date: datetime) -> None:
         cat_pk = self.cat_to_pk(cat)
         exp = type(self.exp_repo.get(1))(amount, cat_pk, expense_date=date, comment=comm)
         if mode == 'add':
@@ -106,21 +113,22 @@ class NewExpenseAdd(QtWidgets.QWidget):
                                             'expense_date': str(date)})[0].pk
             self.exp_repo.update(exp_pk)
 
-    def cat_to_pk(self, cat):
+    def cat_to_pk(self, cat) -> int:
         return self.cat_repo.get_all({'name': cat})[0].pk
 
-    def add(self):
+    def add(self) -> None:
         self.submit('add')
 
-    def delete(self):
+    def delete(self) -> None:
         self.submit('delete')
 
-    def update_exp(self):
+    def update_exp(self) -> None:
         self.submit('update')
 
 
 class Expense(QtWidgets.QWidget):
-    def __init__(self, exp_repo, cat_repo, *args, **kwargs):
+    def __init__(self, exp_repo: AbstractRepository, cat_repo: AbstractRepository,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo

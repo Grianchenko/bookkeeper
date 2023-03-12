@@ -39,15 +39,12 @@ class EditBudget(QtWidgets.QWidget):
         self.layout.addWidget(self.submit_button)
         self.setLayout(self.layout)
 
-    def submit(self):
+    def submit(self) -> None:
         try:
             self.button_clicked.emit(str(self.length_choice.box.currentText()),
-                                     int(self.limit_input.text()))
+                                     int(self.limit_input.input.text()))
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
-
-    def clicked(self, slot):
-        return self.button_clicked.connect(slot)
 
 
 class Budget(QtWidgets.QWidget):

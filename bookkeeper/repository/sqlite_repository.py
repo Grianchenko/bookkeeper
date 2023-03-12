@@ -1,5 +1,6 @@
 from typing import Any
 from inspect import get_annotations
+from datetime import datetime
 
 import sqlite3
 
@@ -36,7 +37,7 @@ class SQLiteRepository(AbstractRepository[T]):
             try:
                 converted_temp += (list(obj.__annotations__.values())[i](temp[i]),)
             except TypeError:
-                if type(temp[i]) == "<class 'datetime.datetime>'":
+                if isinstance(temp[i], datetime):
                     converted_temp += (list(obj.__annotations__.values(
                     ))[i].strptime(temp[i], '%Y-%m-%d %H:%M:%S'),)
                 elif temp[i] is None:

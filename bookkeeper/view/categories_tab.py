@@ -1,4 +1,3 @@
-# from datetime import datetime
 from PySide6 import QtWidgets, QtCore
 
 from bookkeeper.view.utils import LabeledInput, HistoryTable
@@ -52,10 +51,10 @@ class CategoryManager(QtWidgets.QWidget):
         self.layout.addWidget(self.buttons_widget)
         self.setLayout(self.layout)
 
-    def submit(self, mode: str):
+    def submit(self, mode: str) -> None:
         try:
-            self.button_clicked.emit(str(self.name_input.text()),
-                                     str(self.parent_input.text()))
+            self.button_clicked.emit(str(self.name_input.input.text()),
+                                     str(self.parent_input.input.text()))
             if mode == 'add':
                 self.button_clicked.connect(print('Add-Category-Click'))
             elif mode == 'delete':
@@ -65,13 +64,13 @@ class CategoryManager(QtWidgets.QWidget):
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
 
-    def add(self):
+    def add(self) -> None:
         self.submit('add')
 
-    def delete(self):
+    def delete(self) -> None:
         self.submit('delete')
 
-    def update_cat(self):
+    def update_cat(self) -> None:
         self.submit('update')
 
 

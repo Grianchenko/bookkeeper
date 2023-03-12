@@ -11,9 +11,6 @@ class LabeledInput(QtWidgets.QWidget):
         self.layout.addWidget(self.input)
         self.setLayout(self.layout)
 
-    def text(self):
-        return self.input.text()
-
 
 class LabeledBox(QtWidgets.QWidget):
     def __init__(self, text: str, data: list[str], *args, **kwargs):
@@ -40,11 +37,11 @@ class HistoryTable(QtWidgets.QTableWidget):
         header = self.horizontalHeader()
 
         if len(columns) > 2:
-            k = 0
+            count = 0
             for i in range(len(columns) - 1):
-                k = i
+                count = i
                 header.setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeToContents)
-            header.setSectionResizeMode(k+1, QtWidgets.QHeaderView.Stretch)
+            header.setSectionResizeMode(count+1, QtWidgets.QHeaderView.Stretch)
         else:
             header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
             header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
@@ -60,7 +57,7 @@ class HistoryTable(QtWidgets.QTableWidget):
             self.setVerticalHeaderLabels(rows)
         self.setHorizontalHeaderLabels(columns)
 
-    def set_data(self, data: list[list[str]]):
+    def set_data(self, data: list[list[str]]) -> None:
         for i, row in enumerate(data):
-            for j, x in enumerate(row):
-                self.setItem(i, j, QtWidgets.QTableWidgetItem(str(x).capitalize()))
+            for number, x in enumerate(row):
+                self.setItem(i, number, QtWidgets.QTableWidgetItem(str(x).capitalize()))
