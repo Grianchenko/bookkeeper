@@ -11,7 +11,7 @@ def custom_class():
     class Custom:
         pk: int = 0
         name: str = 'hebe'
-        date: datetime.datetime = datetime.datetime(2023, 3, 6)
+        date: str = str(datetime.datetime(2023, 3, 6))
         test_float: float = 1.2451
 
     return Custom
@@ -19,14 +19,14 @@ def custom_class():
 
 @pytest.fixture
 def repo(custom_class):
-    return SQLiteRepository('new_db.db', custom_class)
+    return SQLiteRepository('tests/test_repository/new_db.db', custom_class)
 
 
 def test_crud(repo, custom_class):
     obj = custom_class()
     pk = repo.add(obj)
     assert obj.pk == pk
-    assert repo.get(pk) == obj, f'{pk}, {obj}, {repo.get(pk)}, {repo.fields}'
+    assert repo.get(pk) == obj
     obj2 = custom_class()
     obj2.pk = pk
     repo.update(obj2)
@@ -39,21 +39,26 @@ def test_cannot_add_with_pk(repo, custom_class):
     obj = custom_class()
     obj.pk = 1
     with pytest.raises(ValueError):
-        repo.add(obj)
+        pk = repo.add(obj)
+        assert repo.get(pk)
+        repo.delete(pk)
 
 
 def test_cannot_add_without_pk(repo, custom_class):
     obj = custom_class()
     obj.pk = None
     with pytest.raises(ValueError):
-        repo.add(obj)
+        pk = repo.add(obj)
+        assert repo.get(pk)
+        repo.delete(pk)
 
 
 def test_cannot_delete_unexistent(repo, custom_class):
     obj = custom_class()
     pk = repo.add(obj)
     with pytest.raises(KeyError):
-        repo.delete(pk + 10)
+        assert repo.delete(pk + 10)
+        repo.delete(pk)
 
 
 def test_cannot_update_without_pk(repo, custom_class):
@@ -63,10 +68,12 @@ def test_cannot_update_without_pk(repo, custom_class):
 
 
 def test_get_all(repo, custom_class):
+    for obj in repo.get_all():
+        repo.delete(obj.pk)
     objects = [custom_class() for _ in range(5)]
     for o in objects:
         repo.add(o)
-    assert repo.get_all() == objects
+    assert repo.get_all() == objects, repo.get_all()
 
 
 def test_get_all_with_condition(repo, custom_class):
