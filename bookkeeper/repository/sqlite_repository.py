@@ -1,9 +1,9 @@
 from typing import Any
-
-from bookkeeper.repository.abstract_repository import AbstractRepository, T
 from inspect import get_annotations
 
 import sqlite3
+
+from bookkeeper.repository.abstract_repository import AbstractRepository, T
 
 
 class SQLiteRepository(AbstractRepository[T]):
@@ -67,6 +67,7 @@ class SQLiteRepository(AbstractRepository[T]):
             obj = self.cls(*self.convert_object_datetime(temp))
             if all([getattr(obj, attr) == value for attr, value in where.items()]):
                 objs.append(obj)
+        con.close()
         return objs
 
     def update(self, obj: T) -> None:

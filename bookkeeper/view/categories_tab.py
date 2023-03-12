@@ -1,7 +1,7 @@
 # from datetime import datetime
 from PySide6 import QtWidgets, QtCore
 
-from simple_widgets import LabeledInput, HistoryTable
+from bookkeeper.view.utils import LabeledInput, HistoryTable
 
 
 class CategoriesExists(QtWidgets.QWidget):

@@ -1,7 +1,7 @@
 # from datetime import datetime
 from PySide6 import QtWidgets, QtCore
 
-from simple_widgets import LabeledInput, HistoryTable, LabeledBox
+from bookkeeper.view.utils import LabeledInput, HistoryTable, LabeledBox
 
 
 class ActiveBudgets(QtWidgets.QWidget):
@@ -43,9 +43,11 @@ class EditBudget(QtWidgets.QWidget):
         try:
             self.button_clicked.emit(str(self.length_choice.box.currentText()),
                                      int(self.limit_input.text()))
-            self.button_clicked.connect(print('Update-Budget-Click'))
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
+
+    def clicked(self, slot):
+        return self.button_clicked.connect(slot)
 
 
 class Budget(QtWidgets.QWidget):

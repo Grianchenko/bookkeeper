@@ -1,35 +1,45 @@
 from datetime import datetime
 from PySide6 import QtWidgets, QtCore
 
-from simple_widgets import LabeledInput, HistoryTable, LabeledBox
+from bookkeeper.view.utils import LabeledInput, HistoryTable, LabeledBox
 
 
 class ExpenseHistory(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, exp_repo, cat_repo, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.exp_repo = exp_repo
+        self.cat_repo = cat_repo
         self.columns = ('Date', 'Paid', 'Category', 'Comment')
-        self.train_data = [[datetime(2008, 12, 10), 7.21, 'daafafa', 'comm1'],
-                           [datetime(2012, 5, 22), 6661, 'da', ''],
-                           [datetime(2018, 4, 12), 1516, 'afafafafa', 'riririririr'],
-                           [datetime(2024, 10, 8), 0.12314, '123', '']]
         self.table = HistoryTable(columns=self.columns)
-        self.table.set_data(self.train_data)
-
+        self.data = []
+        self.set_data()
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(QtWidgets.QLabel('History'))
         self.layout.addWidget(self.table)
         self.setLayout(self.layout)
 
+    def set_data(self):
+        self.data = []
+        for exp in self.exp_repo.get_all()[::-1]:
+            temp = [exp.expense_date, exp.amount,
+                    self.cat_repo.get(int(exp.category)).name, exp.comment]
+            self.data.append(temp)
+        self.table.set_data(self.data)
+
 
 class NewExpenseAdd(QtWidgets.QWidget):
     button_clicked = QtCore.Signal(int, str, str, datetime)
+    clicked = QtCore.Signal(int)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, exp_repo, cat_repo, exp_hist, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.exp_hist = exp_hist
+        self.exp_repo = exp_repo
+        self.cat_repo = cat_repo
+        self.cat_list = [cat.name for cat in cat_repo.get_all()]
         self.comm_input = LabeledInput('Comment:', '')
         self.paid_input = LabeledInput('Paid:', '0')
-        self.cat_choice = LabeledBox('Category', ['1', '2', '3'])
+        self.cat_choice = LabeledBox('Category', self.cat_list)
 
         self.add_button = QtWidgets.QPushButton('Add')
         self.add_button.clicked.connect(self.add)
@@ -71,14 +81,33 @@ class NewExpenseAdd(QtWidgets.QWidget):
                                      str(self.comm_input.text()),
                                      str(datetime.strptime(self.date_input.text(),
                                                            '%d.%m.%Y %H:%M')))
-            if mode == 'add':
-                self.button_clicked.connect(print('Add-Expense-Click'))
-            elif mode == 'delete':
-                self.button_clicked.connect(print('Delete-Expense-Click'))
-            elif mode == 'update':
-                self.button_clicked.connect(print('Update-Expense-Click'))
+            if True:
+                self.button_clicked.connect(self.edit_expense(mode, int(self.paid_input.text()),
+                                                              self.cat_choice.box.currentText(),
+                                                              self.comm_input.text(),
+                                                              datetime.strptime(self.date_input.text(),
+                                                                                '%d.%m.%Y %H:%M')))
+            self.button_clicked.connect(self.exp_hist.set_data())
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
+
+    def edit_expense(self, mode: str, amount: int, cat: str, comm: str, date: datetime):
+        cat_pk = self.cat_to_pk(cat)
+        exp = type(self.exp_repo.get(1))(amount, cat_pk, expense_date=date, comment=comm)
+        if mode == 'add':
+            self.exp_repo.add(exp)
+        elif mode == 'delete':
+            exp_pk = self.exp_repo.get_all({'amount': amount,
+                                            'category': cat_pk,
+                                            'expense_date': str(date)})[0].pk
+            self.exp_repo.delete(exp_pk)
+        elif mode == 'update':
+            exp_pk = self.exp_repo.get_all({'comment': comm,
+                                            'expense_date': str(date)})[0].pk
+            self.exp_repo.update(exp_pk)
+
+    def cat_to_pk(self, cat):
+        return self.cat_repo.get_all({'name': cat})[0].pk
 
     def add(self):
         self.submit('add')
@@ -91,11 +120,13 @@ class NewExpenseAdd(QtWidgets.QWidget):
 
 
 class Expense(QtWidgets.QWidget):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, exp_repo, cat_repo, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.exp_repo = exp_repo
+        self.cat_repo = cat_repo
         self.layout = QtWidgets.QVBoxLayout()
-        exp_hist = ExpenseHistory()
-        new_exp = NewExpenseAdd()
-        self.layout.addWidget(exp_hist)
-        self.layout.addWidget(new_exp)
+        self.exp_hist = ExpenseHistory(self.exp_repo, self.cat_repo)
+        self.new_exp = NewExpenseAdd(self.exp_repo, self.cat_repo, self.exp_hist)
+        self.layout.addWidget(self.exp_hist)
+        self.layout.addWidget(self.new_exp)
         self.setLayout(self.layout)
