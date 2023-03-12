@@ -1,6 +1,6 @@
 from PySide6 import QtWidgets
 
-from bookkeeper.view.expanse_tab import ExpenseTab
+from bookkeeper.view.expense_tab import ExpenseTab
 from bookkeeper.view.budget_tab import BudgetTab
 from bookkeeper.view.categories_tab import CategoriesTab
 
