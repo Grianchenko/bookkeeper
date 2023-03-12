@@ -13,13 +13,30 @@ class ExpenseHistory(QtWidgets.QWidget):
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo
         self.columns = ('Date', 'Paid', 'Category', 'Comment')
-        self.table = HistoryTable(columns=self.columns)
+        self.table = HistoryTable(columns=self.columns,
+                                  n_rows=len(self.exp_repo.get_all()))
         self.data = []
         self.set_data()
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(QtWidgets.QLabel('History'))
         self.layout.addWidget(self.table)
         self.setLayout(self.layout)
+
+        self.table.cellChanged.connect(self.handle_cell_changed)
+
+    def handle_cell_changed(self, row: int, column: int):
+        new_value = self.table.item(row, column).text()
+        pk = self.exp_repo.get_all()[::-1][row].pk
+        changed_row = self.exp_repo.get(pk)
+        if column == 0:
+            changed_row.added_date = datetime.strptime(new_value, '%Y-%m-%d %H:%M:%S')
+        elif column == 1:
+            changed_row.amount = new_value
+        elif column == 2:
+            changed_row.category = self.cat_repo.get_all({'name': new_value.lower()})[0].pk
+        else:
+            changed_row.comment = new_value
+        self.exp_repo.update(changed_row)
 
     def set_data(self) -> None:
         self.data = []
@@ -49,8 +66,6 @@ class ExpenseManager(QtWidgets.QWidget):
 
         self.add_button = QtWidgets.QPushButton('Add')
         self.add_button.clicked.connect(self.add)
-        self.update_button = QtWidgets.QPushButton('Update')
-        self.update_button.clicked.connect(self.update_exp)
         self.delete_button = QtWidgets.QPushButton('Delete')
         self.delete_button.clicked.connect(self.delete)
 
@@ -73,7 +88,6 @@ class ExpenseManager(QtWidgets.QWidget):
         self.buttons_widget = QtWidgets.QWidget()
         self.buttons_layout = QtWidgets.QHBoxLayout()
         self.buttons_layout.addWidget(self.add_button)
-        self.buttons_layout.addWidget(self.update_button)
         self.buttons_layout.addWidget(self.delete_button)
         self.buttons_widget.setLayout(self.buttons_layout)
         self.main_layout.addWidget(self.buttons_widget)
@@ -119,13 +133,6 @@ class ExpenseManager(QtWidgets.QWidget):
                                             'category': cat_pk,
                                             'expense_date': str(date)})[0].pk
             self.exp_repo.delete(exp_pk)
-        elif mode == 'update':
-            exp_pk = self.exp_repo.get_all({'comment': comm,
-                                            'expense_date': str(date)})[0].pk
-            exp = Expense(int(amount), cat_pk, expense_date=date,
-                          comment=comm, pk=exp_pk)
-            print(exp)
-            self.exp_repo.update(exp)
 
     def cat_to_pk(self, cat) -> int:
         return self.cat_repo.get_all({'name': cat.lower()})[0].pk
@@ -135,9 +142,6 @@ class ExpenseManager(QtWidgets.QWidget):
 
     def delete(self) -> None:
         self.submit('delete')
-
-    def update_exp(self) -> None:
-        self.submit('update')
 
 
 class ExpenseTab(QtWidgets.QWidget):

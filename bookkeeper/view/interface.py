@@ -24,6 +24,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.budget = BudgetTab(self.exp_repo, self.bud_repo)
         self.category = CategoriesTab(self.cat_repo, self.exp_repo)
 
+        self.expense.setMinimumWidth(600)
+        self.expense.setMaximumWidth(1000)
+        self.budget.setMinimumWidth(350)
+        self.category.setMinimumWidth(330)
+
         self.layout = QtWidgets.QHBoxLayout()
         self.layout.addWidget(self.expense)
         self.layout.addWidget(self.budget)

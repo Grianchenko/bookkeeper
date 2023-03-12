@@ -14,7 +14,7 @@ class CategoriesExists(QtWidgets.QWidget):
         self.cat_repo = cat_repo
         self.columns = ('Category', 'Parent')
         self.data = []
-        self.table = HistoryTable(columns=self.columns)
+        self.table = HistoryTable(columns=self.columns, n_rows=len(self.cat_repo.get_all()))
         self.set_data()
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(QtWidgets.QLabel('Categories'))

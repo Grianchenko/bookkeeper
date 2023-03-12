@@ -25,12 +25,13 @@ class LabeledBox(QtWidgets.QWidget):
 
 
 class HistoryTable(QtWidgets.QTableWidget):
-    def __init__(self, rows: tuple = (), columns: tuple = (), *args, **kwargs):
+    def __init__(self, rows: tuple = (), columns: tuple = (),
+                 n_rows: int = 10, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.setColumnCount(len(columns))
         if len(rows) == 0:
-            rows = ('',) * 10
+            rows = ('',) * n_rows
 
         self.setRowCount(len(rows))
 
@@ -46,7 +47,7 @@ class HistoryTable(QtWidgets.QTableWidget):
             header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
             header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
-        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.setEditTriggers(QtWidgets.QTableWidget.DoubleClicked)
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
                            QtWidgets.QSizePolicy.Preferred)
