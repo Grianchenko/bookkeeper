@@ -5,6 +5,7 @@ from bookkeeper.view.interface import MainWindow
 from bookkeeper.repository.sqlite_repository import SQLiteRepository
 from bookkeeper.models.expense import Expense
 from bookkeeper.models.category import Category
+from bookkeeper.models.budget import Budget
 
 
 class Presenter:
@@ -12,7 +13,8 @@ class Presenter:
         self.db: str = 'main_db.db'
         self.exp_repo = SQLiteRepository[Expense](self.db, Expense)
         self.cat_repo = SQLiteRepository[Category](self.db, Category)
-        self.view: QtWidgets.QMainWindow = MainWindow(self.exp_repo, self.cat_repo)
+        self.bud_repo = SQLiteRepository[Budget](self.db, Budget)
+        self.view: QtWidgets.QMainWindow = MainWindow(self.exp_repo, self.cat_repo, self.bud_repo)
 
 
 if __name__ == '__main__':

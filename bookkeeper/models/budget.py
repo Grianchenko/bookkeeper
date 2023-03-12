@@ -3,7 +3,7 @@
 """
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 
 @dataclass
@@ -16,8 +16,9 @@ class Budget:
     pk - id записи в базе данных
     """
     amount: int
-    category: int
+    category: int = 0
     length: int = 7
-    start_date: datetime = datetime.now()
+    start_date: datetime = date.today() - timedelta(
+        days=datetime.weekday(date.today()))
     end_date: datetime = start_date + timedelta(days=length)
     pk: int = 0
