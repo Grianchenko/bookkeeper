@@ -8,7 +8,7 @@ from bookkeeper.models.expense import Expense
 
 class ExpenseHistory(QtWidgets.QWidget):
     def __init__(self, exp_repo: AbstractRepository[Expense],
-                 cat_repo: AbstractRepository[Expense], *args, **kwargs):
+                 cat_repo: AbstractRepository, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo
@@ -54,7 +54,7 @@ class ExpenseManager(QtWidgets.QWidget):
     button_clicked = QtCore.Signal(int, str, str, datetime)
 
     def __init__(self, exp_repo: AbstractRepository[Expense],
-                 cat_repo: AbstractRepository[Expense],
+                 cat_repo: AbstractRepository,
                  exp_hist: ExpenseHistory, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_hist = exp_hist

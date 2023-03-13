@@ -81,8 +81,8 @@ def test_get_all_with_condition(repo, custom_class):
     for i in range(5):
         o = custom_class()
         o.test_float = i + 2.4
-        o.name = 'bababababa'
+        o.name = 'baobab'
         repo.add(o)
         objects.append(o)
     assert repo.get_all({'test_float': 2.4}) == [objects[0]]
-    assert repo.get_all({'name': 'bababababa'}) == objects
+    assert repo.get_all({'name': 'baobab'}) == objects

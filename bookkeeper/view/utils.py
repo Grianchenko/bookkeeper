@@ -58,7 +58,7 @@ class HistoryTable(QtWidgets.QTableWidget):
             self.setVerticalHeaderLabels(rows)
         self.setHorizontalHeaderLabels(columns)
 
-    def set_data(self, data: list[list[str]]) -> None:
+    def set_data(self, data: list[list[int | str]]) -> None:
         for i, row in enumerate(data):
             for number, x in enumerate(row):
                 self.setItem(i, number, QtWidgets.QTableWidgetItem(str(x).capitalize()))

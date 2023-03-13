@@ -37,7 +37,7 @@ class CategoriesExists(QtWidgets.QWidget):
 class CategoryManager(QtWidgets.QWidget):
     button_clicked = QtCore.Signal(str, str)
 
-    def __init__(self, cat_repo: AbstractRepository[Category],
+    def __init__(self, cat_repo: AbstractRepository,
                  exp_repo: AbstractRepository[Expense],
                  cat_ex: CategoriesExists,
                  *args, **kwargs):
