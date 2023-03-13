@@ -24,7 +24,8 @@ class SQLiteRepository(AbstractRepository[T]):
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
-            cur.execute(f'INSERT INTO {self.table_name} ({names}) VALUES ({placeholders})', values)
+            cur.execute(f'INSERT INTO {self.table_name} ({names}) '
+                        f'VALUES ({placeholders})', values)
             con.commit()
             obj.pk = cur.lastrowid
         con.close()
