@@ -6,7 +6,16 @@ from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
 
 
+def parent_to_pk(cat_repo: AbstractRepository, name: str) -> int | None:
+    try:
+        return cat_repo.get_all({'name': name.lower()})[0].pk
+    except IndexError:
+        return None
+
+
 class CategoriesExists(QtWidgets.QWidget):
+    cellChanged = QtCore.Signal(str)
+
     def __init__(self, cat_repo: AbstractRepository[Category], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cat_repo = cat_repo
@@ -19,6 +28,23 @@ class CategoriesExists(QtWidgets.QWidget):
         self.layout.addWidget(QtWidgets.QLabel('Categories'))
         self.layout.addWidget(self.table)
         self.setLayout(self.layout)
+
+        self.table.cellChanged.connect(self.handle_cell_changed)
+
+    def handle_cell_changed(self, row: int, column: int) -> None:
+        new_value = self.table.item(row, column).text().lower()
+        pk = self.cat_repo.get_all()[::-1][row].pk
+        changed_row = self.cat_repo.get(pk)
+        if column == 0:
+            changed_row.name = new_value
+        else:
+            parent_pk = parent_to_pk(self.cat_repo, new_value)
+            if parent_pk is not None:
+                changed_row.parent = parent_pk
+            else:
+                QtWidgets.QMessageBox.critical(self, 'Error', 'Parant doesn\'t exist')
+                return None
+        self.cat_repo.update(changed_row)
 
     def set_data(self) -> None:
         self.data = []
@@ -47,13 +73,13 @@ class CategoryManager(QtWidgets.QWidget):
         self.exp_repo = exp_repo
         self.par_list = [cat.name for cat in self.cat_repo.get_all()][::-1]
         self.parent_choice = LabeledBox('Parent (if needed)', self.par_list)
+        self.def_cat = 'Другое'
+        self.parent_choice.box.setCurrentText(self.def_cat)
         self.name_input = LabeledInput('Category name', '')
         self.set_par_choice()
 
         self.add_button = QtWidgets.QPushButton('Add')
         self.add_button.clicked.connect(self.add)
-        self.update_button = QtWidgets.QPushButton('Update')
-        self.update_button.clicked.connect(self.update_cat)
         self.delete_button = QtWidgets.QPushButton('Delete')
         self.delete_button.clicked.connect(self.delete)
 
@@ -65,7 +91,6 @@ class CategoryManager(QtWidgets.QWidget):
         self.buttons_widget = QtWidgets.QWidget()
         self.buttons_layout = QtWidgets.QHBoxLayout()
         self.buttons_layout.addWidget(self.add_button)
-        self.buttons_layout.addWidget(self.update_button)
         self.buttons_layout.addWidget(self.delete_button)
         self.buttons_widget.setLayout(self.buttons_layout)
 
@@ -77,6 +102,8 @@ class CategoryManager(QtWidgets.QWidget):
                          cat in self.cat_repo.get_all()][::-1]
         self.parent_choice.box.clear()
         self.parent_choice.box.addItems(self.par_list)
+        self.parent_choice.box.setCurrentText(self.def_cat)
+
         self.button_clicked.emit('', '')
 
     def submit(self, mode: str) -> None:
@@ -93,7 +120,7 @@ class CategoryManager(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
 
     def edit_category(self, mode: str, name: str, parent: str) -> None:
-        parent_pk = self.parent_to_pk(parent)
+        parent_pk = parent_to_pk(self.cat_repo, parent)
         cat = Category(name.lower(), parent_pk)
         if parent != '' and parent_pk is None:
             QtWidgets.QMessageBox.critical(self, 'Error',
@@ -104,35 +131,22 @@ class CategoryManager(QtWidgets.QWidget):
         elif mode == 'delete':
             cat_pk = self.cat_repo.get_all({'name': name.lower(),
                                             'parent': parent_pk})[0].pk
+            if cat_pk == 255:
+                return
             self.cat_repo.delete(cat_pk)
             for exp in self.exp_repo.get_all({'category': cat_pk}):
                 new_exp = Expense(exp.amount, parent_pk, exp.expense_date,
                                   exp.added_date, exp.comment, exp.pk)
                 self.exp_repo.update(new_exp)
-            # self.exp_sig.emit(6, '', '', datetime.datetime.now())
-            # self.exp_sig.connect(print('works'))
             for cat in self.cat_repo.get_all({'parent': cat_pk}):
                 new_cat = Category(cat.name, parent_pk, cat.pk)
                 self.cat_repo.update(new_cat)
-        elif mode == 'update':
-            cat_pk = self.cat_repo.get_all({'name': name.lower()})[0].pk
-            cat = type(self.cat_repo.get_all()[0])(name, parent_pk, pk=cat_pk)
-            self.cat_repo.update(cat)
-
-    def parent_to_pk(self, name: str) -> int | None:
-        try:
-            return self.cat_repo.get_all({'name': name.lower()})[0].pk
-        except IndexError:
-            return None
 
     def add(self) -> None:
         self.submit('add')
 
     def delete(self) -> None:
         self.submit('delete')
-
-    def update_cat(self) -> None:
-        self.submit('update')
 
 
 class CategoriesTab(QtWidgets.QWidget):
