@@ -9,7 +9,7 @@ from bookkeeper.repository.abstract_repository import AbstractRepository, T
 
 class SQLiteRepository(AbstractRepository[T]):
     def __init__(self, db_file: str, cls: type):
-        self.cls: type[T] = cls
+        self.cls: type = cls
         self.db_file: str = db_file
         self.table_name: str = cls.__name__.lower()
         self.fields = get_annotations(cls, eval_str=True)
