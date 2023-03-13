@@ -5,8 +5,9 @@ from datetime import datetime, timedelta, date
 from PySide6 import QtWidgets, QtCore
 
 from bookkeeper.view.utils import LabeledInput, HistoryTable, LabeledBox
-from bookkeeper.repository.sqlite_repository import AbstractRepository
+from bookkeeper.repository.abstract_repository import AbstractRepository
 from bookkeeper.models.budget import Budget
+from bookkeeper.models.expense import Expense
 
 
 def start_date(period: int) -> datetime:
@@ -185,7 +186,7 @@ class BudgetTab(QtWidgets.QWidget):
     Создание виджета, который объединяет виджеты с текущими
     ограничениями и виджета для редактирования ограничений.
     """
-    def __init__(self, exp_repo: AbstractRepository,
+    def __init__(self, exp_repo: AbstractRepository[Expense],
                  bud_repo: AbstractRepository[Budget], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo

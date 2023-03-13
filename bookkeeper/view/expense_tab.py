@@ -8,6 +8,7 @@ from bookkeeper.view.utils import LabeledInput, HistoryTable, \
     LabeledBox, add_del_buttons_widget
 from bookkeeper.repository.abstract_repository import AbstractRepository
 from bookkeeper.models.expense import Expense
+from bookkeeper.models.category import Category
 
 
 class ExpenseHistory(QtWidgets.QWidget):
@@ -20,14 +21,14 @@ class ExpenseHistory(QtWidgets.QWidget):
     изменения не сохрянятся.
     """
     def __init__(self, exp_repo: AbstractRepository[Expense],
-                 cat_repo: AbstractRepository, *args, **kwargs):
+                 cat_repo: AbstractRepository[Category], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo
         self.columns = ('Date', 'Paid', 'Category', 'Comment')
         self.table = HistoryTable(columns=self.columns,
                                   n_rows=len(self.exp_repo.get_all()))
-        self.data = []
+        self.data: list[list[str]] = []
         self.set_data()
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(QtWidgets.QLabel('History'))
@@ -91,13 +92,13 @@ class ExpenseManager(QtWidgets.QWidget):
     button_clicked = QtCore.Signal(int, str, str, datetime)
 
     def __init__(self, exp_repo: AbstractRepository[Expense],
-                 cat_repo: AbstractRepository,
+                 cat_repo: AbstractRepository[Category],
                  exp_hist: ExpenseHistory, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_hist = exp_hist
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo
-        self.cat_list = []
+        self.cat_list: list[str] = []
         self.comm_input = LabeledInput('Comment:', '')
         self.paid_input = LabeledInput('Paid:', '0')
         self.cat_choice = LabeledBox('Category', self.cat_list)
@@ -192,7 +193,7 @@ class ExpenseManager(QtWidgets.QWidget):
         None
         """
         cat_pk = self.cat_to_pk(cat)
-        exp = Expense(amount, cat_pk, expense_date=date, comment=comm)
+        exp = Expense(amount, int(cat_pk), expense_date=date, comment=comm)
         if mode == 'add':
             self.exp_repo.add(exp)
         elif mode == 'delete':
@@ -242,7 +243,7 @@ class ExpenseTab(QtWidgets.QWidget):
     расходов и виджета для добавления/удаления расходов.
     """
     def __init__(self, exp_repo: AbstractRepository[Expense],
-                 cat_repo: AbstractRepository,
+                 cat_repo: AbstractRepository[Category],
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo

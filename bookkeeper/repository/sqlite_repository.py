@@ -71,13 +71,13 @@ class SQLiteRepository(AbstractRepository[T]):
             try:
                 converted_temp += (list(obj.__annotations__.values())[i](elem),)
             except TypeError:
-                if isinstance(temp[i], datetime):
+                if isinstance(elem, datetime):
                     converted_temp += (list(obj.__annotations__.values(
                     ))[i].strptime(elem, '%Y-%m-%d %H:%M:%S'),)
                 elif temp[i] is None:
-                    converted_temp += (temp[i],)
+                    converted_temp += (elem,)
                 else:
-                    converted_temp += (type(temp[i])(temp[i]),)
+                    converted_temp += (type(elem)(elem),)
         return converted_temp
 
     def get(self, pk: int) -> T | None:
@@ -133,7 +133,8 @@ class SQLiteRepository(AbstractRepository[T]):
     def update(self, obj: T) -> None:
         """
         Перезаписать конкретный объект в БД.
-        При изменении объекта, не меняется его идентификатор, оставльные поля можно изменять.
+        При изменении объекта, не меняется его идентификатор,
+        оставльные поля можно изменять.
 
         Parameters
         ----------

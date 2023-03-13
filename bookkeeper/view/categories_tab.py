@@ -5,12 +5,12 @@ from PySide6 import QtWidgets, QtCore
 
 from bookkeeper.view.utils import LabeledInput, HistoryTable, \
     LabeledBox, add_del_buttons_widget
-from bookkeeper.repository.abstract_repository import AbstractRepository
+from bookkeeper.repository.abstract_repository import AbstractRepository, T
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
 
 
-def parent_to_pk(repo: AbstractRepository, name: str) -> int | None:
+def parent_to_pk(repo: AbstractRepository[T], name: str) -> int | None:
     """
     Нахождение идентификатора категории по названию.
     Используется для обработки названий родительских категорий.
@@ -45,7 +45,7 @@ class CategoriesExists(QtWidgets.QWidget):
         super().__init__(*args, **kwargs)
         self.cat_repo = cat_repo
         self.columns = ('Category', 'Parent')
-        self.data = []
+        self.data: list[list[str]] = []
         self.table = HistoryTable(columns=self.columns,
                                   n_rows=len(self.cat_repo.get_all()))
         self.set_data()
@@ -111,7 +111,7 @@ class CategoryManager(QtWidgets.QWidget):
     """
     button_clicked = QtCore.Signal(str, str)
 
-    def __init__(self, cat_repo: AbstractRepository,
+    def __init__(self, cat_repo: AbstractRepository[Category],
                  exp_repo: AbstractRepository[Expense],
                  cat_ex: CategoriesExists,
                  *args, **kwargs):
@@ -211,7 +211,7 @@ class CategoryManager(QtWidgets.QWidget):
                 return
             self.cat_repo.delete(cat_pk)
             for exp in self.exp_repo.get_all({'category': cat_pk}):
-                new_exp = Expense(exp.amount, parent_pk, exp.expense_date,
+                new_exp = Expense(exp.amount, int(parent_pk), exp.expense_date,
                                   exp.added_date, exp.comment, exp.pk)
                 self.exp_repo.update(new_exp)
             for cat in self.cat_repo.get_all({'parent': cat_pk}):

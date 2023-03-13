@@ -7,6 +7,9 @@ from bookkeeper.repository.abstract_repository import AbstractRepository
 from bookkeeper.view.expense_tab import ExpenseTab
 from bookkeeper.view.budget_tab import BudgetTab
 from bookkeeper.view.categories_tab import CategoriesTab
+from bookkeeper.models.expense import Expense
+from bookkeeper.models.budget import Budget
+from bookkeeper.models.category import Category
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -16,9 +19,9 @@ class MainWindow(QtWidgets.QMainWindow):
     Создается приветственное окно.
     Описывается передача сигналов от одних виджетов, к другим.
     """
-    def __init__(self, exp_repo: AbstractRepository,
-                 cat_repo: AbstractRepository,
-                 bud_repo: AbstractRepository) -> None:
+    def __init__(self, exp_repo: AbstractRepository[Expense],
+                 cat_repo: AbstractRepository[Category],
+                 bud_repo: AbstractRepository[Budget]) -> None:
         super().__init__()
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo
