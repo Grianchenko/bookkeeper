@@ -1,6 +1,15 @@
 from PySide6 import QtWidgets
 
 
+def add_del_buttons_widget(cls: QtWidgets.QWidget):
+    buttons_widget = QtWidgets.QWidget()
+    buttons_layout = QtWidgets.QHBoxLayout()
+    buttons_layout.addWidget(cls.add_button)
+    buttons_layout.addWidget(cls.delete_button)
+    buttons_widget.setLayout(buttons_layout)
+    return buttons_widget
+
+
 class LabeledInput(QtWidgets.QWidget):
     def __init__(self, text: str, placeholder: int | str, *args, **kwargs):
         super().__init__(*args, **kwargs)

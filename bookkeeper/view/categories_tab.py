@@ -1,6 +1,7 @@
 from PySide6 import QtWidgets, QtCore
 
-from bookkeeper.view.utils import LabeledInput, HistoryTable, LabeledBox
+from bookkeeper.view.utils import LabeledInput, HistoryTable, \
+    LabeledBox, add_del_buttons_widget
 from bookkeeper.repository.abstract_repository import AbstractRepository
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
@@ -88,13 +89,7 @@ class CategoryManager(QtWidgets.QWidget):
         self.layout.addWidget(self.name_input)
         self.layout.addWidget(self.parent_choice)
 
-        self.buttons_widget = QtWidgets.QWidget()
-        self.buttons_layout = QtWidgets.QHBoxLayout()
-        self.buttons_layout.addWidget(self.add_button)
-        self.buttons_layout.addWidget(self.delete_button)
-        self.buttons_widget.setLayout(self.buttons_layout)
-
-        self.layout.addWidget(self.buttons_widget)
+        self.layout.addWidget(add_del_buttons_widget(self))
         self.setLayout(self.layout)
 
     def set_par_choice(self) -> None:

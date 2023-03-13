@@ -1,7 +1,8 @@
 from datetime import datetime
 from PySide6 import QtWidgets, QtCore
 
-from bookkeeper.view.utils import LabeledInput, HistoryTable, LabeledBox
+from bookkeeper.view.utils import LabeledInput, HistoryTable, \
+    LabeledBox, add_del_buttons_widget
 from bookkeeper.repository.abstract_repository import AbstractRepository
 from bookkeeper.models.expense import Expense
 
@@ -87,12 +88,7 @@ class ExpenseManager(QtWidgets.QWidget):
         self.inputs_widget.setLayout(self.layout)
         self.main_layout.addWidget(self.inputs_widget)
 
-        self.buttons_widget = QtWidgets.QWidget()
-        self.buttons_layout = QtWidgets.QHBoxLayout()
-        self.buttons_layout.addWidget(self.add_button)
-        self.buttons_layout.addWidget(self.delete_button)
-        self.buttons_widget.setLayout(self.buttons_layout)
-        self.main_layout.addWidget(self.buttons_widget)
+        self.main_layout.addWidget(add_del_buttons_widget(self))
 
         self.setLayout(self.main_layout)
 

@@ -35,7 +35,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.central_widget = QtWidgets.QWidget()
         self.central_widget.setLayout(self.layout)
         self.setCentralWidget(self.central_widget)
-        with open('./greetings.txt', 'r') as myf:
+        with open('./greetings.txt', 'r', encoding='utf-8') as myf:
             greetings = myf.read()
         QtWidgets.QMessageBox.about(self, 'Hello!', greetings)
 
