@@ -1,5 +1,3 @@
-import datetime
-
 from PySide6 import QtWidgets, QtCore
 
 from bookkeeper.view.utils import LabeledInput, HistoryTable, LabeledBox
@@ -9,12 +7,13 @@ from bookkeeper.models.expense import Expense
 
 
 class CategoriesExists(QtWidgets.QWidget):
-    def __init__(self, cat_repo: AbstractRepository, *args, **kwargs):
+    def __init__(self, cat_repo: AbstractRepository[Category], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cat_repo = cat_repo
         self.columns = ('Category', 'Parent')
         self.data = []
-        self.table = HistoryTable(columns=self.columns, n_rows=len(self.cat_repo.get_all()))
+        self.table = HistoryTable(columns=self.columns,
+                                  n_rows=len(self.cat_repo.get_all()))
         self.set_data()
         self.layout = QtWidgets.QVBoxLayout()
         self.layout.addWidget(QtWidgets.QLabel('Categories'))
@@ -38,8 +37,8 @@ class CategoriesExists(QtWidgets.QWidget):
 class CategoryManager(QtWidgets.QWidget):
     button_clicked = QtCore.Signal(str, str)
 
-    def __init__(self, cat_repo: AbstractRepository,
-                 exp_repo: AbstractRepository,
+    def __init__(self, cat_repo: AbstractRepository[Category],
+                 exp_repo: AbstractRepository[Expense],
                  cat_ex: CategoriesExists,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -47,7 +46,7 @@ class CategoryManager(QtWidgets.QWidget):
         self.cat_repo = cat_repo
         self.exp_repo = exp_repo
         self.par_list = [cat.name for cat in self.cat_repo.get_all()][::-1]
-        self.parent_choice = LabeledBox('Category', self.par_list)
+        self.parent_choice = LabeledBox('Parent (if needed)', self.par_list)
         self.name_input = LabeledInput('Category name', '')
         self.set_par_choice()
 
@@ -73,7 +72,7 @@ class CategoryManager(QtWidgets.QWidget):
         self.layout.addWidget(self.buttons_widget)
         self.setLayout(self.layout)
 
-    def set_par_choice(self):
+    def set_par_choice(self) -> None:
         self.par_list = [cat.name.capitalize() for
                          cat in self.cat_repo.get_all()][::-1]
         self.parent_choice.box.clear()
@@ -84,17 +83,16 @@ class CategoryManager(QtWidgets.QWidget):
         try:
             self.button_clicked.emit(str(self.name_input.input.text()),
                                      str(self.parent_choice.box.currentText()))
-            if True:
-                self.button_clicked.connect(
-                    self.edit_category(mode,
-                                       str(self.name_input.input.text()),
-                                       str(self.parent_choice.box.currentText())))
+            self.button_clicked.connect(
+                self.edit_category(mode,
+                                   str(self.name_input.input.text()),
+                                   str(self.parent_choice.box.currentText())))
             self.button_clicked.connect(self.cat_ex.set_data())
             self.button_clicked.connect(self.set_par_choice())
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
 
-    def edit_category(self, mode: str, name: str, parent: str):
+    def edit_category(self, mode: str, name: str, parent: str) -> None:
         parent_pk = self.parent_to_pk(parent)
         cat = Category(name.lower(), parent_pk)
         if parent != '' and parent_pk is None:
@@ -121,7 +119,7 @@ class CategoryManager(QtWidgets.QWidget):
             cat = type(self.cat_repo.get_all()[0])(name, parent_pk, pk=cat_pk)
             self.cat_repo.update(cat)
 
-    def parent_to_pk(self, name: str):
+    def parent_to_pk(self, name: str) -> int | None:
         try:
             return self.cat_repo.get_all({'name': name.lower()})[0].pk
         except IndexError:
@@ -138,8 +136,8 @@ class CategoryManager(QtWidgets.QWidget):
 
 
 class CategoriesTab(QtWidgets.QWidget):
-    def __init__(self, cat_repo: AbstractRepository,
-                 exp_repo: AbstractRepository, *args, **kwargs):
+    def __init__(self, cat_repo: AbstractRepository[Category],
+                 exp_repo: AbstractRepository[Expense], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo

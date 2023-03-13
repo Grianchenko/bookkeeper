@@ -1,17 +1,15 @@
-from PySide6 import QtWidgets, QtCore
-from datetime import datetime
+from PySide6 import QtWidgets
 
+from bookkeeper.repository.abstract_repository import AbstractRepository
 from bookkeeper.view.expense_tab import ExpenseTab
 from bookkeeper.view.budget_tab import BudgetTab
 from bookkeeper.view.categories_tab import CategoriesTab
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    exp_button_clicked = QtCore.Signal(int, str, str, datetime)
-    cat_button_clicked = QtCore.Signal(str, str)
-    bud_button_clicked = QtCore.Signal(str, int)
-
-    def __init__(self, exp_repo, cat_repo, bud_repo):
+    def __init__(self, exp_repo: AbstractRepository,
+                 cat_repo: AbstractRepository,
+                 bud_repo: AbstractRepository) -> None:
         super().__init__()
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo

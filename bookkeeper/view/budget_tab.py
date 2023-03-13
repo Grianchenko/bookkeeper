@@ -6,31 +6,29 @@ from bookkeeper.repository.sqlite_repository import AbstractRepository
 from bookkeeper.models.budget import Budget
 
 
-def start_date(days_ago):
+def start_date(days_ago: int) -> datetime:
     if days_ago == 7:
         return datetime.strptime(str(date.today() -
                                      timedelta(days=datetime.weekday(
                                          date.today()))), '%Y-%m-%d')
-    elif days_ago == 1:
-        return datetime.strptime(str(datetime.today().date()), '%Y-%m-%d')
-    elif days_ago in [28, 29, 30, 31]:
+    if days_ago in [28, 29, 30, 31]:
         return datetime.strptime(str(date.today() -
                                      timedelta(days=int(datetime.strftime(
                                          datetime.now(), '%d'))-1)),
                                  '%Y-%m-%d')
+    return datetime.strptime(str(datetime.today().date()), '%Y-%m-%d')
 
 
 class ActiveBudgets(QtWidgets.QWidget):
     def __init__(self, exp_repo: AbstractRepository,
-                 bud_repo: AbstractRepository, *args, **kwargs):
+                 bud_repo: AbstractRepository[Budget], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo
         self.bud_repo = bud_repo
-        self.rows = ('Day', 'Week', 'Month')
-        self.columns = ('Paid', 'Limit')
+        self.rows_columns = (('Day', 'Week', 'Month'), ('Paid', 'Limit'))
 
-        self.data = []
-        self.table = HistoryTable(self.rows, self.columns)
+        self.data: list[list[int]] = []
+        self.table = HistoryTable(self.rows_columns[0], self.rows_columns[1])
         self.set_data()
         if self.data[0][0] > self.data[0][1] or \
                 self.data[1][0] > self.data[1][1] or \
@@ -50,7 +48,7 @@ class ActiveBudgets(QtWidgets.QWidget):
         self.timer = QtCore.QBasicTimer()
         self.timer.start(500, self)
 
-    def timerEvent(self, event):
+    def timerEvent(self, event) -> None:
         self.set_data()
 
     @QtCore.Slot()
@@ -59,21 +57,21 @@ class ActiveBudgets(QtWidgets.QWidget):
         for i in [1, 7, 30]:
             data_bud.append(self.bud_repo.get_all({'length': i})[::-1][0].amount)
         got_exp = self.exp_repo.get_all()[::-1]
-        d, w, m = 0, 0, 0
+        day_amount, week_amount, month_amount = 0, 0, 0
         for exp in got_exp:
             exp_date = datetime.strptime(exp.expense_date, '%Y-%m-%d %H:%M:%S')
             if exp_date >= start_date(1):
-                m += exp.amount
-                d += exp.amount
-                w += exp.amount
+                month_amount += exp.amount
+                day_amount += exp.amount
+                week_amount += exp.amount
             elif exp_date >= start_date(7):
-                m += exp.amount
-                w += exp.amount
+                month_amount += exp.amount
+                week_amount += exp.amount
             elif exp_date >= start_date(30):
-                m += exp.amount
-        self.data = [[d, data_bud[0]],
-                     [w, data_bud[1]],
-                     [m, data_bud[2]]]
+                month_amount += exp.amount
+        self.data = [[day_amount, data_bud[0]],
+                     [week_amount, data_bud[1]],
+                     [month_amount, data_bud[2]]]
 
         self.table.set_data(self.data)
 
@@ -81,7 +79,7 @@ class ActiveBudgets(QtWidgets.QWidget):
 class BudgetManager(QtWidgets.QWidget):
     button_clicked = QtCore.Signal(str, int)
 
-    def __init__(self, bud_repo: AbstractRepository, *args, **kwargs):
+    def __init__(self, bud_repo: AbstractRepository[Budget], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bud_repo = bud_repo
         self.length_choice = LabeledBox('Category', ['day', 'week', 'month'])
@@ -120,7 +118,7 @@ class BudgetManager(QtWidgets.QWidget):
 
 class BudgetTab(QtWidgets.QWidget):
     def __init__(self, exp_repo: AbstractRepository,
-                 bud_repo: AbstractRepository, *args, **kwargs):
+                 bud_repo: AbstractRepository[Budget], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo
         self.bud_repo = bud_repo

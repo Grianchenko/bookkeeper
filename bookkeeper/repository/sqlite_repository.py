@@ -9,7 +9,7 @@ from bookkeeper.repository.abstract_repository import AbstractRepository, T
 
 class SQLiteRepository(AbstractRepository[T]):
     def __init__(self, db_file: str, cls: type):
-        self.cls: type = cls
+        self.cls: type[T] = cls
         self.db_file: str = db_file
         self.table_name: str = cls.__name__.lower()
         self.fields = get_annotations(cls, eval_str=True)
@@ -19,27 +19,27 @@ class SQLiteRepository(AbstractRepository[T]):
         if getattr(obj, 'pk', None) != 0:
             raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
         names = ', '.join(self.fields.keys())
-        p = ', '.join('?' * len(self.fields))
+        placeholders = ', '.join('?' * len(self.fields))
         values = [getattr(obj, i) for i in self.fields]
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute('PRAGMA foreign_keys = ON')
-            cur.execute(f'INSERT INTO {self.table_name} ({names}) VALUES ({p})', values)
+            cur.execute(f'INSERT INTO {self.table_name} ({names}) VALUES ({placeholders})', values)
             con.commit()
             obj.pk = cur.lastrowid
         con.close()
         return obj.pk
 
-    def convert_object_datetime(self, temp: list | tuple) -> tuple:
+    def convert_object_datetime(self, temp: list[T] | tuple[T]) -> tuple[T]:
         obj = self.cls(*temp)
-        converted_temp = tuple()
-        for i in range(len(temp)):
+        converted_temp: tuple = tuple()
+        for i, elem in enumerate(temp):
             try:
-                converted_temp += (list(obj.__annotations__.values())[i](temp[i]),)
+                converted_temp += (list(obj.__annotations__.values())[i](elem),)
             except TypeError:
                 if isinstance(temp[i], datetime):
                     converted_temp += (list(obj.__annotations__.values(
-                    ))[i].strptime(temp[i], '%Y-%m-%d %H:%M:%S'),)
+                    ))[i].strptime(elem, '%Y-%m-%d %H:%M:%S'),)
                 elif temp[i] is None:
                     converted_temp += (temp[i],)
                 else:
@@ -79,12 +79,12 @@ class SQLiteRepository(AbstractRepository[T]):
         pk = obj.pk
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
-            for i in range(len(names)):
+            for i, elem in enumerate(names):
                 try:
-                    cur.execute(f'UPDATE {self.table_name} SET {names[i]}'
+                    cur.execute(f'UPDATE {self.table_name} SET {elem}'
                                 f' = {repr(values[i])} WHERE pk = {pk}')
                 except sqlite3.OperationalError:
-                    cur.execute(f'UPDATE {self.table_name} SET {names[i]}'
+                    cur.execute(f'UPDATE {self.table_name} SET {elem}'
                                 f' = {repr(str(values[i]))} WHERE pk = {pk}')
             con.commit()
         con.close()

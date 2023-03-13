@@ -9,12 +9,14 @@ from bookkeeper.models.budget import Budget
 
 
 class Presenter:
-    def __init__(self):
-        self.db: str = 'main_db.db'
-        self.exp_repo = SQLiteRepository[Expense](self.db, Expense)
-        self.cat_repo = SQLiteRepository[Category](self.db, Category)
-        self.bud_repo = SQLiteRepository[Budget](self.db, Budget)
-        self.view: QtWidgets.QMainWindow = MainWindow(self.exp_repo, self.cat_repo, self.bud_repo)
+    def __init__(self) -> None:
+        self.database: str = 'main_db.db'
+        self.exp_repo = SQLiteRepository[Expense](self.database, Expense)
+        self.cat_repo = SQLiteRepository[Category](self.database, Category)
+        self.bud_repo = SQLiteRepository[Budget](self.database, Budget)
+        self.view: QtWidgets.QMainWindow = MainWindow(self.exp_repo,
+                                                      self.cat_repo,
+                                                      self.bud_repo)
 
 
 if __name__ == '__main__':

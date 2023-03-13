@@ -18,7 +18,6 @@ class Budget:
     amount: int
     category: int = 0
     length: int = 7
-    start_date: datetime = date.today() - timedelta(
-        days=datetime.weekday(date.today()))
-    end_date: datetime = start_date + timedelta(days=length)
+    start_date: date = date.today() - timedelta(days=datetime.weekday(date.today()))
+    end_date: date = start_date + timedelta(days=length)
     pk: int = 0

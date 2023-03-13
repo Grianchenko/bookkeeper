@@ -7,8 +7,8 @@ from bookkeeper.models.expense import Expense
 
 
 class ExpenseHistory(QtWidgets.QWidget):
-    def __init__(self, exp_repo: AbstractRepository, cat_repo: AbstractRepository,
-                 *args, **kwargs):
+    def __init__(self, exp_repo: AbstractRepository[Expense],
+                 cat_repo: AbstractRepository[Expense], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo
         self.cat_repo = cat_repo
@@ -24,7 +24,7 @@ class ExpenseHistory(QtWidgets.QWidget):
 
         self.table.cellChanged.connect(self.handle_cell_changed)
 
-    def handle_cell_changed(self, row: int, column: int):
+    def handle_cell_changed(self, row: int, column: int) -> None:
         new_value = self.table.item(row, column).text()
         pk = self.exp_repo.get_all()[::-1][row].pk
         changed_row = self.exp_repo.get(pk)
@@ -33,7 +33,8 @@ class ExpenseHistory(QtWidgets.QWidget):
         elif column == 1:
             changed_row.amount = new_value
         elif column == 2:
-            changed_row.category = self.cat_repo.get_all({'name': new_value.lower()})[0].pk
+            changed_row.category = self.cat_repo.get_all(
+                {'name': new_value.lower()})[0].pk
         else:
             changed_row.comment = new_value
         self.exp_repo.update(changed_row)
@@ -52,7 +53,8 @@ class ExpenseHistory(QtWidgets.QWidget):
 class ExpenseManager(QtWidgets.QWidget):
     button_clicked = QtCore.Signal(int, str, str, datetime)
 
-    def __init__(self, exp_repo: AbstractRepository, cat_repo: AbstractRepository,
+    def __init__(self, exp_repo: AbstractRepository[Expense],
+                 cat_repo: AbstractRepository[Expense],
                  exp_hist: ExpenseHistory, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_hist = exp_hist
@@ -95,7 +97,7 @@ class ExpenseManager(QtWidgets.QWidget):
         self.setLayout(self.main_layout)
 
     @QtCore.Slot()
-    def set_cat_list(self):
+    def set_cat_list(self) -> None:
         self.cat_list = [cat.name.capitalize() for
                          cat in self.cat_repo.get_all()]
         self.cat_choice.box.clear()
@@ -109,15 +111,10 @@ class ExpenseManager(QtWidgets.QWidget):
                                      str(self.comm_input.input.text()),
                                      str(datetime.strptime(self.date_input.text(),
                                                            '%d.%m.%Y %H:%M')))
-            if True:
-                self.button_clicked.connect(self.edit_expense(mode,
-                                                              int(self.paid_input.input.text()),
-                                                              self.cat_choice.box.
-                                                              currentText(),
-                                                              self.comm_input.input.text(),
-                                                              datetime.strptime
-                                                              (self.date_input.text(),
-                                                               '%d.%m.%Y %H:%M')))
+            self.button_clicked.connect(self.edit_expense(
+                mode, int(self.paid_input.input.text()),
+                self.cat_choice.box.currentText(), self.comm_input.input.text(),
+                datetime.strptime(self.date_input.text(), '%d.%m.%Y %H:%M')))
             self.button_clicked.connect(self.exp_hist.set_data())
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
@@ -145,7 +142,8 @@ class ExpenseManager(QtWidgets.QWidget):
 
 
 class ExpenseTab(QtWidgets.QWidget):
-    def __init__(self, exp_repo: AbstractRepository, cat_repo: AbstractRepository,
+    def __init__(self, exp_repo: AbstractRepository[Expense],
+                 cat_repo: AbstractRepository,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.exp_repo = exp_repo
