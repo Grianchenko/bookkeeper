@@ -1,3 +1,6 @@
+"""
+Описание главного окна приложения.
+"""
 from PySide6 import QtWidgets
 
 from bookkeeper.repository.abstract_repository import AbstractRepository
@@ -7,6 +10,12 @@ from bookkeeper.view.categories_tab import CategoriesTab
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    """
+    Главное окно приложения.
+    Создаются виджеты, содержащиеся в окне.
+    Создается приветственное окно.
+    Описывается передача сигналов от одних виджетов, к другим.
+    """
     def __init__(self, exp_repo: AbstractRepository,
                  cat_repo: AbstractRepository,
                  bud_repo: AbstractRepository) -> None:
@@ -35,6 +44,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.central_widget = QtWidgets.QWidget()
         self.central_widget.setLayout(self.layout)
         self.setCentralWidget(self.central_widget)
+
         with open('./greetings.txt', 'r', encoding='utf-8') as myf:
             greetings = myf.read()
         QtWidgets.QMessageBox.about(self, 'Hello!', greetings)
@@ -42,4 +52,3 @@ class MainWindow(QtWidgets.QMainWindow):
         self.category.new_cat.button_clicked.connect(self.expense.new_exp.set_cat_list)
         self.category.act_cat.table.cellChanged.connect(self.expense.new_exp.set_cat_list)
         self.expense.new_exp.button_clicked.connect(self.budget.act_bud.set_data)
-        self.budget.edit_bud.button_clicked.connect(self.budget.act_bud.set_data)

@@ -1,3 +1,6 @@
+"""
+Описание виджета для работы с расходами.
+"""
 from datetime import datetime
 from PySide6 import QtWidgets, QtCore
 
@@ -8,6 +11,14 @@ from bookkeeper.models.expense import Expense
 
 
 class ExpenseHistory(QtWidgets.QWidget):
+    """
+    Виджет, показывающий историю внесенных расходов.
+    Изменять поля расходов предлагается прямо в таблице.
+    Двойным щелчком мыши активируется редактирование поля,
+    нажатие клавиши Enter сохраняет изменения. Если ошибиться в формате данных
+    (например, ввести 'сто' вместо 100), появится сообщение об ошибке,
+    изменения не сохрянятся.
+    """
     def __init__(self, exp_repo: AbstractRepository[Expense],
                  cat_repo: AbstractRepository, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -26,21 +37,43 @@ class ExpenseHistory(QtWidgets.QWidget):
         self.table.cellChanged.connect(self.handle_cell_changed)
 
     def handle_cell_changed(self, row: int, column: int) -> None:
+        """
+        Обработчик изменения ячейки таблицы. Вызывется, если изменить данные.
+
+        Parameters
+        ----------
+        row - номер измененной строки;
+        column - номер измененного столбца.
+
+        Returns
+        -------
+        None
+        """
         new_value = self.table.item(row, column).text()
         pk = self.exp_repo.get_all()[::-1][row].pk
         changed_row = self.exp_repo.get(pk)
-        if column == 0:
-            changed_row.added_date = datetime.strptime(new_value, '%Y-%m-%d %H:%M:%S')
-        elif column == 1:
-            changed_row.amount = new_value
-        elif column == 2:
-            changed_row.category = self.cat_repo.get_all(
-                {'name': new_value.lower()})[0].pk
-        else:
-            changed_row.comment = new_value
-        self.exp_repo.update(changed_row)
+        try:
+            if column == 0:
+                changed_row.added_date = datetime.strptime(new_value, '%Y-%m-%d %H:%M:%S')
+            elif column == 1:
+                changed_row.amount = int(new_value)
+            elif column == 2:
+                changed_row.category = self.cat_repo.get_all(
+                    {'name': new_value.lower()})[0].pk
+            else:
+                changed_row.comment = new_value
+            self.exp_repo.update(changed_row)
+        except (TypeError, ValueError):
+            QtWidgets.QMessageBox.critical(self, 'Error', 'Wrong input!')
 
     def set_data(self) -> None:
+        """
+        Отрисовка таблицы истории расходов.
+
+        Returns
+        -------
+        None
+        """
         self.data = []
         got_all = self.exp_repo.get_all()
         if got_all:
@@ -52,6 +85,9 @@ class ExpenseHistory(QtWidgets.QWidget):
 
 
 class ExpenseManager(QtWidgets.QWidget):
+    """
+    Виджет для добавления и удаления расходов.
+    """
     button_clicked = QtCore.Signal(int, str, str, datetime)
 
     def __init__(self, exp_repo: AbstractRepository[Expense],
@@ -94,6 +130,15 @@ class ExpenseManager(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def set_cat_list(self) -> None:
+        """
+        Обновляет список категорий в выпадающем списке категорий.
+        Вызывается при добавлении, изменении или удалении категории
+        в разделе работы с категориями.
+
+        Returns
+        -------
+        None
+        """
         self.cat_list = [cat.name.capitalize() for
                          cat in self.cat_repo.get_all()]
         self.cat_choice.box.clear()
@@ -101,6 +146,18 @@ class ExpenseManager(QtWidgets.QWidget):
         self.exp_hist.set_data()
 
     def submit(self, mode: str) -> None:
+        """
+        Срабатывает после нажаитя кнопки. Вызывает обработку полученных данных
+        или выдает ошибку при неправильном вводе данных пользователем.
+
+        Parameters
+        ----------
+        mode - 'add' или 'delete', режим обрабботки данных: добавление или удаление.
+
+        Returns
+        -------
+        None
+        """
         try:
             self.button_clicked.emit(int(self.paid_input.input.text()),
                                      str(self.cat_choice.box.currentText()),
@@ -117,6 +174,23 @@ class ExpenseManager(QtWidgets.QWidget):
 
     def edit_expense(self, mode: str, amount: int,
                      cat: str, comm: str, date: datetime) -> None:
+        """
+        Обрабатывает введенные в поля данные в нужном режиме.
+        Добавление: добавляет запись в репозиторий.
+        Удаление: удаляет объект с заданными категрией, суммой и датой расхода.
+
+        Parameters
+        ----------
+        mode - 'add' или 'delete', режим обрабботки данных: добавление или удаление;
+        amount - сумма расхода;
+        cat - категория расхода;
+        comm - комментарий к расходу;
+        date - дата расхода.
+
+        Returns
+        -------
+        None
+        """
         cat_pk = self.cat_to_pk(cat)
         exp = Expense(amount, cat_pk, expense_date=date, comment=comm)
         if mode == 'add':
@@ -127,17 +201,46 @@ class ExpenseManager(QtWidgets.QWidget):
                                             'expense_date': str(date)})[0].pk
             self.exp_repo.delete(exp_pk)
 
-    def cat_to_pk(self, cat) -> int:
+    def cat_to_pk(self, cat: str) -> int:
+        """
+        Нахождение идентификатора категории по названию.
+
+        Parameters
+        ----------
+        cat - название категории.
+
+        Returns
+        -------
+        None
+        """
         return self.cat_repo.get_all({'name': cat.lower()})[0].pk
 
     def add(self) -> None:
+        """
+        Вызывает метод submit в режиме добавления.
+
+        Returns
+        -------
+        None
+        """
         self.submit('add')
 
     def delete(self) -> None:
+        """
+        Вызывает метод submit в режиме удаления.
+
+        Returns
+        -------
+        None
+        """
         self.submit('delete')
 
 
 class ExpenseTab(QtWidgets.QWidget):
+    """
+    Создание виджета, который объединяет виджеты с историей
+    расходов и виджета для добавления/удаления расходов.
+    """
     def __init__(self, exp_repo: AbstractRepository[Expense],
                  cat_repo: AbstractRepository,
                  *args, **kwargs):

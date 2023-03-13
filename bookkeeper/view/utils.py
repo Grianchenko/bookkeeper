@@ -1,7 +1,23 @@
+"""
+Описание фунций и виджетов, часто использующихся
+в более сложных виджетах.
+"""
 from PySide6 import QtWidgets
 
 
-def add_del_buttons_widget(cls: QtWidgets.QWidget):
+def add_del_buttons_widget(cls: QtWidgets.QWidget) -> QtWidgets.QWidget:
+    """
+    Создает виджет, содержащий кнопки 'Add' и 'Delete'.
+
+    Parameters
+    ----------
+    cls - виджет, в который необходимо добавить кнопки;
+    в нем должны быть определены сами кнопки.
+
+    Returns
+    -------
+    Виджет с двумя кнопками, расположенными рядом.
+    """
     buttons_widget = QtWidgets.QWidget()
     buttons_layout = QtWidgets.QHBoxLayout()
     buttons_layout.addWidget(cls.add_button)
@@ -11,6 +27,10 @@ def add_del_buttons_widget(cls: QtWidgets.QWidget):
 
 
 class LabeledInput(QtWidgets.QWidget):
+    """
+    Создается поле ввода текста с названием text
+    и значением по умолчанию placeholder.
+    """
     def __init__(self, text: str, placeholder: int | str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.layout = QtWidgets.QVBoxLayout()
@@ -22,6 +42,10 @@ class LabeledInput(QtWidgets.QWidget):
 
 
 class LabeledBox(QtWidgets.QWidget):
+    """
+    Создает выпадающий список с названием text
+    и вариантами выбора из списка data.
+    """
     def __init__(self, text: str, data: list[str], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.layout = QtWidgets.QVBoxLayout()
@@ -34,7 +58,17 @@ class LabeledBox(QtWidgets.QWidget):
 
 
 class HistoryTable(QtWidgets.QTableWidget):
-    def __init__(self, rows: tuple = (), columns: tuple = (),
+    """
+    Отрисовка таблицы.
+    Получает кортежи названий строк и столбцов и количество строк.
+    Если столбцов больше 2, все столбцы, кроме последнего, растягиваются
+    по размеру контента; последний растягивается максимально.
+    Если столбцов 2 - сторятся равные стобцы.
+    Если строк больше трех, их названия не указываются на таблице.
+    Ячейки активируются по двойному щелчку, измененные данные
+    по умолчанию не сохраняются.
+    """
+    def __init__(self, rows: tuple = tuple(), columns: tuple = tuple(),
                  n_rows: int = 10, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -68,6 +102,17 @@ class HistoryTable(QtWidgets.QTableWidget):
         self.setHorizontalHeaderLabels(columns)
 
     def set_data(self, data: list[list[int | str]]) -> None:
+        """
+        Заполнение таблицы.
+
+        Parameters
+        ----------
+        data - данные, которыми заполняется таблица.
+
+        Returns
+        -------
+        None
+        """
         for i, row in enumerate(data):
             for number, x in enumerate(row):
                 self.setItem(i, number, QtWidgets.QTableWidgetItem(str(x).capitalize()))

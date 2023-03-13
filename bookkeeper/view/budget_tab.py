@@ -1,3 +1,6 @@
+"""
+Описание виджета для работы с бюджетом.
+"""
 from datetime import datetime, timedelta, date
 from PySide6 import QtWidgets, QtCore
 
@@ -6,12 +9,25 @@ from bookkeeper.repository.sqlite_repository import AbstractRepository
 from bookkeeper.models.budget import Budget
 
 
-def start_date(days_ago: int) -> datetime:
-    if days_ago == 7:
+def start_date(period: int) -> datetime:
+    """
+    Получение даты, с которой необходимо начать отсчет:
+    сегодняшнее число, понедельник, первое число месяца.
+
+    Parameters
+    ----------
+    period - количество дней в нужном периоде: неделя - 7, месяц - [28; 31],
+    в ином случае считается, что нужно сегодняшнее число
+
+    Returns
+    -------
+    Дата начала данного периода в формате YYYY-MM-DD.
+    """
+    if period == 7:
         return datetime.strptime(str(date.today() -
                                      timedelta(days=datetime.weekday(
                                          date.today()))), '%Y-%m-%d')
-    if days_ago in [28, 29, 30, 31]:
+    if period in [28, 29, 30, 31]:
         return datetime.strptime(str(date.today() -
                                      timedelta(days=int(datetime.strftime(
                                          datetime.now(), '%d'))-1)),
@@ -20,6 +36,15 @@ def start_date(days_ago: int) -> datetime:
 
 
 class ActiveBudgets(QtWidgets.QWidget):
+    """
+    Виджет, показывающий текущие траты и ограничения,
+    а также дату и номер дня недели.
+
+    В случае превышения ограничения, выдается окно с информацией о том,
+    что пользователь обеднеет, если продолжит так тратить деньги.
+
+    Виджет обновляется каждые 0.5 секунды для обработки трат и новых бюджетов.
+    """
     def __init__(self, exp_repo: AbstractRepository,
                  bud_repo: AbstractRepository[Budget], *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,10 +74,31 @@ class ActiveBudgets(QtWidgets.QWidget):
         self.timer.start(500, self)
 
     def timerEvent(self, event) -> None:
+        """
+        Библиотечная функция, нужна для работы таймера.
+        Вызывает функцию по таймеру.
+
+        Parameters
+        ----------
+        event - необходимый параметр.
+
+        Returns
+        -------
+        None
+        """
         self.set_data()
 
     @QtCore.Slot()
     def set_data(self) -> None:
+        """
+        Подсчет трат за нужные периоды. Отрисовка таблицы бюджетов и трат.
+        Вызывается по таймеру. Актуальными ограничениями, считаются
+        последние записи в БД с нужной продолжительностью.
+
+        Returns
+        -------
+        None
+        """
         data_bud = []
         for i in [1, 7, 30]:
             data_bud.append(self.bud_repo.get_all({'length': i})[::-1][0].amount)
@@ -77,8 +123,9 @@ class ActiveBudgets(QtWidgets.QWidget):
 
 
 class BudgetManager(QtWidgets.QWidget):
-    button_clicked = QtCore.Signal(str, int)
-
+    """
+    Виджет для изменения бюджетов.
+    """
     def __init__(self, bud_repo: AbstractRepository[Budget], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bud_repo = bud_repo
@@ -95,16 +142,33 @@ class BudgetManager(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
     def submit(self) -> None:
+        """
+        Срабатывает от нажатия кнопки. Пытается вызвать функцию new_budget.
+        В случае неудачи из-за ошибки ввода выдается ошибка.
+
+        Returns
+        -------
+        None
+        """
         try:
-            self.button_clicked.emit(str(self.length_choice.box.currentText()),
-                                     int(self.limit_input.input.text()))
-            self.button_clicked.connect(self.new_budget(str(
-                self.length_choice.box.currentText()),
-                int(self.limit_input.input.text())))
+            self.new_budget(str(self.length_choice.box.currentText()),
+                            int(self.limit_input.input.text()))
         except ValueError:
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
 
     def new_budget(self, duration: str, limit: int) -> None:
+        """
+        Добавляет новый объект в БД с бюджетами.
+
+        Parameters
+        ----------
+        duration - продолжительность нового ограничения: день, неделя или месяц.
+        limit - органичение на данный промежуток времени.
+
+        Returns
+        -------
+        None
+        """
         dur = 7
         if duration == 'day':
             dur = 1
@@ -117,6 +181,10 @@ class BudgetManager(QtWidgets.QWidget):
 
 
 class BudgetTab(QtWidgets.QWidget):
+    """
+    Создание виджета, который объединяет виджеты с текущими
+    ограничениями и виджета для редактирования ограничений.
+    """
     def __init__(self, exp_repo: AbstractRepository,
                  bud_repo: AbstractRepository[Budget], *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1,3 +1,6 @@
+"""
+Описание виджета для работы с категориями.
+"""
 from PySide6 import QtWidgets, QtCore
 
 from bookkeeper.view.utils import LabeledInput, HistoryTable, \
@@ -7,14 +10,35 @@ from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
 
 
-def parent_to_pk(cat_repo: AbstractRepository, name: str) -> int | None:
+def parent_to_pk(repo: AbstractRepository, name: str) -> int | None:
+    """
+    Нахождение идентификатора категории по названию.
+    Используется для обработки названий родительских категорий.
+
+    Parameters
+    ----------
+    repo - репозиторий, по которому будет вестись поиск.
+    name - имя категории, идентификатор, которой требудется узнать.
+
+    Returns
+    -------
+    Индетификатор или None, если ни один объект не найден.
+    """
     try:
-        return cat_repo.get_all({'name': name.lower()})[0].pk
+        return repo.get_all({'name': name.lower()})[0].pk
     except IndexError:
         return None
 
 
 class CategoriesExists(QtWidgets.QWidget):
+    """
+    Виджет, показывающий уже существующие категории.
+    Изменять названия и родителькие категории предлагается прямо в таблице.
+    Двойным щелчком мыши активируется редактирование поля,
+    нажатие клавиши Enter сохраняет изменения. Если заданного родителя не существует,
+    появится сообщение об ошибке, изменения не сохрянятся.
+    Все категории наследуются от категории 'Другое', ее удалить нельзя.
+    """
     cellChanged = QtCore.Signal(str)
 
     def __init__(self, cat_repo: AbstractRepository[Category], *args, **kwargs):
@@ -33,6 +57,18 @@ class CategoriesExists(QtWidgets.QWidget):
         self.table.cellChanged.connect(self.handle_cell_changed)
 
     def handle_cell_changed(self, row: int, column: int) -> None:
+        """
+        Обработчик изменения ячейки таблицы. Вызывется, если изменить данные.
+
+        Parameters
+        ----------
+        row - номер измененной строки;
+        column - номер измененного столбца.
+
+        Returns
+        -------
+        None
+        """
         new_value = self.table.item(row, column).text().lower()
         pk = self.cat_repo.get_all()[::-1][row].pk
         changed_row = self.cat_repo.get(pk)
@@ -46,8 +82,16 @@ class CategoriesExists(QtWidgets.QWidget):
                 QtWidgets.QMessageBox.critical(self, 'Error', 'Parant doesn\'t exist')
                 return None
         self.cat_repo.update(changed_row)
+        return None
 
     def set_data(self) -> None:
+        """
+        Отрисовка таблицы существующих категорий.
+
+        Returns
+        -------
+        None
+        """
         self.data = []
         got_all = self.cat_repo.get_all()
         if got_all:
@@ -62,6 +106,9 @@ class CategoriesExists(QtWidgets.QWidget):
 
 
 class CategoryManager(QtWidgets.QWidget):
+    """
+    Виджет для добавления и удаления категорий.
+    """
     button_clicked = QtCore.Signal(str, str)
 
     def __init__(self, cat_repo: AbstractRepository,
@@ -93,15 +140,33 @@ class CategoryManager(QtWidgets.QWidget):
         self.setLayout(self.layout)
 
     def set_par_choice(self) -> None:
+        """
+        Устанавливает значение выбора категории на 'Другое' по умолячанию.
+
+        Returns
+        -------
+        None
+        """
         self.par_list = [cat.name.capitalize() for
                          cat in self.cat_repo.get_all()][::-1]
         self.parent_choice.box.clear()
         self.parent_choice.box.addItems(self.par_list)
         self.parent_choice.box.setCurrentText(self.def_cat)
-
         self.button_clicked.emit('', '')
 
     def submit(self, mode: str) -> None:
+        """
+        Срабатывает после нажаитя кнопки. Вызывает обработку полученных данных
+        или выдает ошибку при неправильном вводе данных пользователем.
+
+        Parameters
+        ----------
+        mode - 'add' или 'delete', режим обрабботки данных: добавление или удаление.
+
+        Returns
+        -------
+        None
+        """
         try:
             self.button_clicked.emit(str(self.name_input.input.text()),
                                      str(self.parent_choice.box.currentText()))
@@ -115,6 +180,22 @@ class CategoryManager(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(self, 'Error', 'Incorrect input!')
 
     def edit_category(self, mode: str, name: str, parent: str) -> None:
+        """
+        Обрабатывает введенные в поля данные в нужном режиме.
+        Добавление: добавляет запись в репозиторий.
+        Удаление: удаляет объект с заданными названием и родителем; все дочерние
+        категории становятсяс дочерними для родительской категории.
+
+        Parameters
+        ----------
+        mode - 'add' или 'delete', режим обрабботки данных: добавление или удаление;
+        name - Название категории;
+        parent - Название родительской категории.
+
+        Returns
+        -------
+        None
+        """
         parent_pk = parent_to_pk(self.cat_repo, parent)
         cat = Category(name.lower(), parent_pk)
         if parent != '' and parent_pk is None:
@@ -138,13 +219,31 @@ class CategoryManager(QtWidgets.QWidget):
                 self.cat_repo.update(new_cat)
 
     def add(self) -> None:
+        """
+        Вызывает метод submit в режиме добавления.
+
+        Returns
+        -------
+        None
+        """
         self.submit('add')
 
     def delete(self) -> None:
+        """
+        Вызывает метод submit в режиме удаления.
+
+        Returns
+        -------
+        None
+        """
         self.submit('delete')
 
 
 class CategoriesTab(QtWidgets.QWidget):
+    """
+    Создание виджета, который объединяет виджеты с существующими
+    категориями и виджета для добавления/удаления категорий.
+    """
     def __init__(self, cat_repo: AbstractRepository[Category],
                  exp_repo: AbstractRepository[Expense], *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1,3 +1,6 @@
+"""
+Репозиторий для хранения данных в базе данных sqlite3
+"""
 from typing import Any
 from inspect import get_annotations
 from datetime import datetime
@@ -8,6 +11,14 @@ from bookkeeper.repository.abstract_repository import AbstractRepository, T
 
 
 class SQLiteRepository(AbstractRepository[T]):
+    """
+    Репозиторий, хранящий данные в базе данных.
+
+    Parameters
+        ----------
+        db_file - файл, содержущий базу данных
+        cls - модель, описывающая данные
+    """
     def __init__(self, db_file: str, cls: type):
         self.cls: type = cls
         self.db_file: str = db_file
@@ -16,6 +27,17 @@ class SQLiteRepository(AbstractRepository[T]):
         self.fields.pop('pk')
 
     def add(self, obj: T) -> int:
+        """
+        Добавление объектов в базу данных.
+
+        Parameters
+        ----------
+        obj - объект, который необхходимо добавить в БД.
+
+        Returns
+        -------
+        Идентификатор объекта в БД.
+        """
         if getattr(obj, 'pk', None) != 0:
             raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
         names = ', '.join(self.fields.keys())
@@ -32,6 +54,17 @@ class SQLiteRepository(AbstractRepository[T]):
         return obj.pk
 
     def convert_object_datetime(self, temp: list[T] | tuple[T]) -> tuple[T]:
+        """
+        Конвертация элементов объекта к нужным типам данных, в частности datetime.
+
+        Parameters
+        ----------
+        temp - список или кортеж элементов объекта
+
+        Returns
+        -------
+        Кортеж элементов, приведенных к нужным типам данных.
+        """
         obj = self.cls(*temp)
         converted_temp: tuple = tuple()
         for i, elem in enumerate(temp):
@@ -48,6 +81,17 @@ class SQLiteRepository(AbstractRepository[T]):
         return converted_temp
 
     def get(self, pk: int) -> T | None:
+        """
+        Получить объект базы данных по идентификатору.
+
+        Parameters
+        ----------
+        pk - идентификатор объекта.
+
+        Returns
+        -------
+        Объект, соответствующий идентификатору, или None, если объект не найден
+        """
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             res = cur.execute(f'SELECT * FROM {self.table_name} WHERE pk = {pk}')
@@ -58,6 +102,20 @@ class SQLiteRepository(AbstractRepository[T]):
         return self.cls(*self.convert_object_datetime(temp))
 
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
+        """
+        Получить список всех записей из БД с условием,
+        если оно указано, или без в ином случае.
+
+        Parameters
+        ----------
+        where - условие для поиска записей, например,
+        поиск по конкретному имени (con_name) выглядит так:
+        where = {'name': con_name}.
+
+        Returns
+        -------
+        Список объектов, содержащихся в БД.
+        """
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             res = cur.execute(f'SELECT * FROM {self.table_name}')
@@ -73,6 +131,18 @@ class SQLiteRepository(AbstractRepository[T]):
         return objs
 
     def update(self, obj: T) -> None:
+        """
+        Перезаписать конкретный объект в БД.
+        При изменении объекта, не меняется его идентификатор, оставльные поля можно изменять.
+
+        Parameters
+        ----------
+        obj - обновленный объект, который необходимо заменить в БД.
+
+        Returns
+        -------
+        None
+        """
         if obj.pk == 0:
             raise ValueError('attempt to update object with unknown primary key')
         names = list(self.fields.keys())
@@ -91,6 +161,17 @@ class SQLiteRepository(AbstractRepository[T]):
         con.close()
 
     def delete(self, pk: int) -> None:
+        """
+        Удалить объект из БД.
+
+        Parameters
+        ----------
+        pk - идентификатор объекта, подлежащего удалению.
+
+        Returns
+        -------
+        None
+        """
         with sqlite3.connect(self.db_file) as con:
             cur = con.cursor()
             cur.execute(f'DELETE FROM {self.table_name} WHERE pk = {pk}')
